@@ -1,25 +1,38 @@
 package ru.job4j.cinema.model;
 
-import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.Objects;
+import java.util.Set;
 
 public class Movie {
 
     private int id;
     private String name;
     private String description;
-    private LocalDate premiereDate;
+    private int year;
     private byte[] poster;
+
+    private int duration;
+    private Set<Genre> genres;
 
     public Movie() {
     }
 
-    public Movie(int id, String name, String description, LocalDate premiereDate, byte[] poster) {
+    public Movie(int id, String name, String description, int year, byte[] poster, int duration) {
         this.id = id;
         this.name = name;
         this.description = description;
-        this.premiereDate = premiereDate;
+        this.year = year;
         this.poster = poster;
+        this.duration = duration;
+    }
+
+    public Movie(String name, String description, int year, byte[] poster, int duration) {
+        this.name = name;
+        this.description = description;
+        this.year = year;
+        this.poster = poster;
+        this.duration = duration;
     }
 
     public int getId() {
@@ -46,12 +59,12 @@ public class Movie {
         this.description = description;
     }
 
-    public LocalDate getPremiereDate() {
-        return premiereDate;
+    public int getYear() {
+        return year;
     }
 
-    public void setPremiereDate(LocalDate premiereDate) {
-        this.premiereDate = premiereDate;
+    public void setYear(int year) {
+        this.year = year;
     }
 
     public byte[] getPoster() {
@@ -60,6 +73,22 @@ public class Movie {
 
     public void setPoster(byte[] poster) {
         this.poster = poster;
+    }
+
+    public int getDuration() {
+        return duration;
+    }
+
+    public void setDuration(int duration) {
+        this.duration = duration;
+    }
+
+    public Set<Genre> getGenres() {
+        return genres;
+    }
+
+    public void setGenres(Set<Genre> genres) {
+        this.genres = genres;
     }
 
     @Override
@@ -85,7 +114,9 @@ public class Movie {
                 + "id=" + id
                 + ", name='" + name + '\''
                 + ", description='" + description + '\''
-                + ", premiereDate=" + premiereDate
+                + ", year=" + year
+                + ", poster=" + Arrays.toString(poster)
+                + ", genres=" + genres
                 + '}';
     }
 }

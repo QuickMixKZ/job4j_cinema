@@ -1,9 +1,15 @@
+CREATE TABLE authorities (
+    id serial primary key,
+    authority VARCHAR(50) NOT NULL UNIQUE
+);
+
 CREATE TABLE IF NOT EXISTS users(
     id SERIAL NOT NULL PRIMARY KEY,
     username VARCHAR NOT NULL UNIQUE,
     email VARCHAR NOT NULL UNIQUE,
     phone VARCHAR NOT NULL UNIQUE,
-    password VARCHAR NOT NULL
+    password VARCHAR NOT NULL,
+    authority_id INT NOT NULL REFERENCES authorities(id)
 );
 
 CREATE TABLE IF NOT EXISTS genre(
@@ -15,13 +21,14 @@ CREATE TABLE IF NOT EXISTS movie(
     id SERIAL NOT NULL PRIMARY KEY,
     name VARCHAR NOT NULL,
     description VARCHAR NOT NULL,
-    premiere_date TIMESTAMP NOT NULL,
+    year SMALLINT NOT NULL CHECK ( year > 1900 ),
+    duration SMALLINT NOT NULL CHECK (duration > 0),
     poster BYTEA,
-    UNIQUE (name, premiere_date)
+    UNIQUE (name, year)
 );
 
 CREATE TABLE IF NOT EXISTS movie_genre(
-    movie_id INT REFERENCES movie(id),
+    movie_id INT REFERENCES movie(id) ON DELETE CASCADE,
     genre_id INT REFERENCES genre(id)
 );
 
