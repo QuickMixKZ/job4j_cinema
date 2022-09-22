@@ -44,7 +44,7 @@ buttonBuy.addEventListener('click', () => {
      const jsonString = JSON.stringify(tickets);
      console.log(jsonString);
      jQuery.ajax ({
-         url: window.location.origin + '/movies-today/buyTickets/', // TODO
+         url: window.location.origin + '/movies-today/buyTickets/',
          type: "POST",
          data: jsonString,
          dataType: "json",
@@ -52,7 +52,7 @@ buttonBuy.addEventListener('click', () => {
          statusCode: {
             202: function () {
                 alert('Билеты куплены.');
-                window.location.href = window.location.origin + '/profile/tickets'; // TODO
+                window.location.href = window.location.origin + '/profile/tickets';
             },
              400: function () {
                 alert('Не удалось купить билет(ы), попробуйте ещё раз!');
