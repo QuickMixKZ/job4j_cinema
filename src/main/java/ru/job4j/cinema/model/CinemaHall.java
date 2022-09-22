@@ -25,6 +25,10 @@ public class CinemaHall {
         this.seatsPerRow = seatsPerRow;
     }
 
+    public CinemaHall(String name) {
+        this.name = name;
+    }
+
     public int getId() {
         return id;
     }

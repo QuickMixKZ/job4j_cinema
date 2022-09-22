@@ -21,6 +21,20 @@ public class Ticket {
         this.seat = seat;
     }
 
+    public Ticket(Session session, User user, int row, int seat) {
+        this.session = session;
+        this.user = user;
+        this.row = row;
+        this.seat = seat;
+    }
+
+    public Ticket(int id, Session session, int row, int seat) {
+        this.id = id;
+        this.session = session;
+        this.row = row;
+        this.seat = seat;
+    }
+
     public int getId() {
         return id;
     }

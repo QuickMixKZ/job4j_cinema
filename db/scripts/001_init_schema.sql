@@ -1,4 +1,4 @@
-CREATE TABLE authorities (
+CREATE TABLE IF NOT EXISTS authorities (
     id serial primary key,
     authority VARCHAR(50) NOT NULL UNIQUE
 );
@@ -9,7 +9,8 @@ CREATE TABLE IF NOT EXISTS users(
     email VARCHAR NOT NULL UNIQUE,
     phone VARCHAR NOT NULL UNIQUE,
     password VARCHAR NOT NULL,
-    authority_id INT NOT NULL REFERENCES authorities(id)
+    authority_id INT NOT NULL REFERENCES authorities(id),
+    enabled BOOLEAN DEFAULT TRUE
 );
 
 CREATE TABLE IF NOT EXISTS genre(
@@ -42,8 +43,10 @@ CREATE TABLE IF NOT EXISTS cinema_hall(
 CREATE TABLE IF NOT EXISTS sessions(
     id SERIAL NOT NULL PRIMARY KEY,
     movie_id INT REFERENCES movie(id),
-    cinema_hall INT REFERENCES cinema_hall(id),
-    date TIMESTAMP NOT NULL
+    cinema_hall_id INT REFERENCES cinema_hall(id),
+    start_date TIMESTAMP NOT NULL,
+    CHECK (start_date > now()),
+    UNIQUE (cinema_hall_id, start_date)
 );
 
 CREATE TABLE IF NOT EXISTS ticket(
@@ -51,6 +54,7 @@ CREATE TABLE IF NOT EXISTS ticket(
     session_id INT REFERENCES sessions(id),
     user_id INT REFERENCES users(id),
     pos_row INT NOT NULL,
-    seat INT NOT NULL
+    seat INT NOT NULL,
+    UNIQUE(session_id, pos_row, seat)
 );
 

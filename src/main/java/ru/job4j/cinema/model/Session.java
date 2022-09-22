@@ -1,5 +1,7 @@
 package ru.job4j.cinema.model;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -8,6 +10,7 @@ public class Session {
     private int id;
     private Movie movie;
     private CinemaHall cinemaHall;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime date;
 
     public Session() {
@@ -15,6 +18,12 @@ public class Session {
 
     public Session(int id, Movie movie, CinemaHall cinemaHall, LocalDateTime date) {
         this.id = id;
+        this.movie = movie;
+        this.cinemaHall = cinemaHall;
+        this.date = date;
+    }
+
+    public Session(Movie movie, CinemaHall cinemaHall, LocalDateTime date) {
         this.movie = movie;
         this.cinemaHall = cinemaHall;
         this.date = date;

@@ -2,20 +2,20 @@ package ru.job4j.cinema.model;
 
 import java.util.Objects;
 
-public class Genre {
+public class Authority {
 
     private int id;
     private String name;
 
-    public Genre() {
+    public Authority() {
     }
 
-    public Genre(int id, String name) {
-        this.id = id;
+    public Authority(String name) {
         this.name = name;
     }
 
-    public Genre(String name) {
+    public Authority(int id, String name) {
+        this.id = id;
         this.name = name;
     }
 
@@ -43,8 +43,8 @@ public class Genre {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        Genre genre = (Genre) o;
-        return id == genre.id;
+        Authority authority = (Authority) o;
+        return id == authority.id;
     }
 
     @Override
@@ -54,6 +54,9 @@ public class Genre {
 
     @Override
     public String toString() {
-        return name;
+        return "Authority{"
+                + "id=" + id
+                + ", name='" + name + '\''
+                + '}';
     }
 }

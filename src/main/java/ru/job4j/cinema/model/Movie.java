@@ -1,6 +1,5 @@
 package ru.job4j.cinema.model;
 
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.Set;
 
@@ -32,6 +31,11 @@ public class Movie {
         this.description = description;
         this.year = year;
         this.poster = poster;
+        this.duration = duration;
+    }
+
+    public Movie(String name, int duration) {
+        this.name = name;
         this.duration = duration;
     }
 
@@ -115,7 +119,6 @@ public class Movie {
                 + ", name='" + name + '\''
                 + ", description='" + description + '\''
                 + ", year=" + year
-                + ", poster=" + Arrays.toString(poster)
                 + ", genres=" + genres
                 + '}';
     }

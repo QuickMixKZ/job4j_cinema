@@ -11,6 +11,8 @@ public class User {
     private String password;
     private Authority authority;
 
+    private boolean enabled;
+
     public User() {
     }
 
@@ -27,6 +29,15 @@ public class User {
         this.email = email;
         this.phone = phone;
         this.password = password;
+    }
+
+    public User(int id, String username, String email, String phone, String password, boolean enabled) {
+        this.id = id;
+        this.username = username;
+        this.email = email;
+        this.phone = phone;
+        this.password = password;
+        this.enabled = enabled;
     }
 
     public int getId() {
@@ -75,6 +86,14 @@ public class User {
 
     public void setAuthority(Authority authority) {
         this.authority = authority;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
     @Override

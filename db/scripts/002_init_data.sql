@@ -1,36 +1,33 @@
-insert into authorities (authority) values ('ROLE_USER');
-insert into authorities (authority) values ('ROLE_ADMIN');
+insert into authorities(authority) values ('ROLE_USER');
+insert into authorities(authority) values ('ROLE_ADMIN');
 
--- INSERT INTO genre(name) VALUES ('Драма');
--- INSERT INTO genre(name) VALUES ('Детектив');
--- INSERT INTO genre(name) VALUES ('Комедия');
--- INSERT INTO genre(name) VALUES ('Вестерн');
--- INSERT INTO genre(name) VALUES ('Триллер');
--- INSERT INTO genre(name) VALUES ('Ужасы');
---
--- INSERT INTO sessions(name, genre_id, description) VALUES ('Зеленая миля (1999)', 1,
---                                                           'В тюрьме для смертников появляется заключенный с божественным даром. ' ||
---                                                           'Мистическая драма по роману Стивена Кинга');
--- INSERT INTO sessions(name, genre_id, description) VALUES ('Форрест Гамп (1994)', 1,
---                                                           'Полувековая история США глазами чудака из Алабамы. ' ||
---                                                           'Абсолютная классика Роберта Земекиса с Томом Хэнксом');
--- INSERT INTO sessions(name, genre_id, description) VALUES ('Шестое чувство (1999)', 2,
---                                                           'Детский психолог открывает жуткую тайну маленького пациента. ' ||
---                                                           'Грандиозная мистическая драма с Брюсом Уиллисом');
--- INSERT INTO sessions(name, genre_id, description) VALUES ('Достать ножи (2019)', 2,
---                                                           'Частный детектив ведет запутанное дело о смерти известного писателя. ' ||
---                                                           'Криминальная комедия с Дэниэлом Крэйгом');
--- INSERT INTO sessions(name, genre_id, description) VALUES ('Один дома (1990)', 3,
---                                                           'Мальчик-озорник задает жару грабителям. ' ||
---                                                           'Лучшая комедия для создания праздничного настроения у всей семьи');
--- INSERT INTO sessions(name, genre_id, description) VALUES ('12 стульев (1971)', 3,
---                                                           'Товарищ Бендер в погоне за бриллиантами мадам Петуховой. ' ||
---                                                           'Гайдаевская экранизация великого сатирического романа');
--- INSERT INTO sessions(name, genre_id, description) VALUES ('Джанго освобожденный (2012)', 4,
---                                                           'Метко шутя и стреляя, охотники за головами уничтожают негодяев. ' ||
---                                                           'Квентин Тарантино пробует силы в вестерне');
--- INSERT INTO sessions(name, genre_id, description) VALUES ('Жизнь других (2006)', 5,
---                                                           'Капитан Штази ведет слежку за драматургом. Оскароносная драма о том, каково это — жить при диктатуре');
--- INSERT INTO sessions(name, genre_id, description) VALUES ('Чужой (1979)', 6,
---                                                           'Группа космонавтов высаживается на неизвестной планете и знакомится с ксеноморфом. ' ||
---                                                           'Шедевр Ридли Скотта');
+insert into
+    users(username, email, phone, password, authority_id)
+VALUES
+    ('admin', 'admin@admins.com', '+7 777 777 77 77', '$2a$10$4AsEg2XW5BquYkQaCwfyoeaPMgUtOfxxNfNN7RiJwhOBhgc7owtUa', 2);
+
+INSERT INTO cinema_hall(name, rows_number, seats_per_row) VALUES ('Малый', 10, 8);
+INSERT INTO cinema_hall(name, rows_number, seats_per_row) VALUES ('Средний', 12, 14);
+INSERT INTO cinema_hall(name, rows_number, seats_per_row) VALUES ('Большой', 20, 15);
+
+INSERT INTO genre(name) VALUES ('Биографический');
+INSERT INTO genre(name) VALUES ('Боевик');
+INSERT INTO genre(name) VALUES ('Вестерн');
+INSERT INTO genre(name) VALUES ('Военный');
+INSERT INTO genre(name) VALUES ('Детектив');
+INSERT INTO genre(name) VALUES ('Детский');
+INSERT INTO genre(name) VALUES ('Драма');
+INSERT INTO genre(name) VALUES ('Документальный');
+INSERT INTO genre(name) VALUES ('Исторический');
+INSERT INTO genre(name) VALUES ('Комедия');
+INSERT INTO genre(name) VALUES ('Криминал');
+INSERT INTO genre(name) VALUES ('Мистика');
+INSERT INTO genre(name) VALUES ('Мультфильм');
+INSERT INTO genre(name) VALUES ('Научный');
+INSERT INTO genre(name) VALUES ('Приключения');
+INSERT INTO genre(name) VALUES ('Семейный');
+INSERT INTO genre(name) VALUES ('Спорт');
+INSERT INTO genre(name) VALUES ('Триллер');
+INSERT INTO genre(name) VALUES ('Ужасы');
+INSERT INTO genre(name) VALUES ('Фантастика');
+INSERT INTO genre(name) VALUES ('Фэнтези');
