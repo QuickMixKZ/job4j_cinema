@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+
+    <link href="/css/ticket.css" rel="stylesheet">
+
+    <title>Кинотеатр "Кинохит"</title>
+</head>
+<body>
+<div class="container">
+    <div style="text-align:center">
+        <a th:href="@{/movies-today}">На главную</a>
+    </div>
+    <tr th:each="ticket: ${tickets}">
+        <div class="cardWrap">
+            <div class="card cardLeft">
+                <h1>Кинотеатр <span>"Кинохит"</span></h1>
+                <div class="title">
+                    <h2 th:text="${ticket.session.movie.name}"></h2>
+                    <span>Фильм</span>
+                </div>
+                <div class="hall">
+                    <h2 th:text="${ticket.session.cinemaHall.name}"></h2>
+                    <span>Зал</span>
+                </div>
+                <div class="seat">
+                    <h2 th:text="${ticket.row} + ':' + ${ticket.seat}"></h2>
+                    <span>Ряд:Место</span>
+                </div>
+                <div class="time">
+                    <h2 th:text="${#temporals.format(ticket.session.date, 'dd-MM-yyyy HH:mm')}"></h2>
+                    <span>Дата/время</span>
+                </div>
+            </div>
+            <div class="card cardRight">
+                <div class="eye"></div>
+                <div class="number">
+                    <h3 th:text="${ticket.row} + ':' + ${ticket.seat}"></h3>
+                    <span>Ряд:Место</span>
+                </div>
+                <div class="barcode"></div>
+            </div>
+        </div>
+    </tr>
+</div>
+</body>
+</html>

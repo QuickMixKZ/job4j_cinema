@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+
+    <link href="/css/seat_booking.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.js"></script>
+    <title>Кинотеатр "Кинохит"</title>
+</head>
+<body>
+<div class="movie-container">
+
+    <ul class="showcase">
+        <li>
+            <div class="seat"></div>
+            <small>Свободно</small>
+        </li>
+        <li>
+            <div class="seat selected"></div>
+            <small>Выбрано</small>
+        </li>
+        <li>
+            <div class="seat occupied"></div>
+            <small>Занято</small>
+        </li>
+    </ul>
+    <div class="container">
+        <div class="screen"></div>
+        <div id="rows">
+            <div th:each="row, iter: ${seats}" th:id="*{iter.count}" class="row">
+                <div th:each="seat, iter: ${row}" th:id="*{iter.count}" th:attr="class=${seat ? 'seat occupied' : 'seat'}"></div>
+            </div>
+        </div>
+        <p class="text">
+            Выбрано мест: <span id="count">0</span>.
+        </p>
+        <button id="buttonBuy">Купить</button>
+        <a th:href="@{|/movies-today|}">Отмена</a>
+    </div>
+</div>
+<script src="/js/seat_booking.js"></script>
+</body>
+</html>
