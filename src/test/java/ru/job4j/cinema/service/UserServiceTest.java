@@ -4,6 +4,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import ru.job4j.cinema.Main;
+import ru.job4j.cinema.model.Authority;
 import ru.job4j.cinema.model.User;
 import ru.job4j.cinema.repository.UserRepository;
 
@@ -107,11 +108,13 @@ public class UserServiceTest {
 
     @Test
     public void whenAddThenUpdate() {
+        Authority authority = userService.findAuthorityByAuthority("ROLE_USER");
         User newUser = new User(
                 "user",
                 "user@users.com",
                 "+ 7 (777) 77-77-77",
                 "qwerty");
+        newUser.setAuthority(authority);
         User addedUser = userService.add(newUser);
         addedUser.setEmail("new_email@users.com");
         Assert.assertTrue(userService.update(addedUser));
