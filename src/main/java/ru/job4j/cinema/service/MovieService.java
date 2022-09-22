@@ -49,7 +49,7 @@ public class MovieService {
     public boolean update(Movie movie) {
         Movie movieById = findById(movie.getId());
         Optional<Movie> movieByNameAndYear = movieRepository.findByNameAndYear(movie.getName(), movie.getYear());
-        if (movieByNameAndYear.isPresent()) {
+        if (movieByNameAndYear.isPresent() && movieByNameAndYear.get().getId() != movie.getId()) {
             throw new IllegalArgumentException(
                     String.format(
                             "Unable to update movie. Movie with name \"%s\" and year - %d already exists.",
@@ -57,6 +57,10 @@ public class MovieService {
                             movie.getYear()));
         }
         return movieRepository.update(movie);
+    }
+
+    public byte[] getMoviePosterById(int id) {
+        return movieRepository.getMoviePosterById(id);
     }
 
     public void deleteAll() {

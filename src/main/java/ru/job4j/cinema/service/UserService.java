@@ -1,6 +1,7 @@
 package ru.job4j.cinema.service;
 
 import org.springframework.stereotype.Service;
+import ru.job4j.cinema.model.Authority;
 import ru.job4j.cinema.model.User;
 import ru.job4j.cinema.repository.UserRepository;
 
@@ -29,6 +30,13 @@ public class UserService {
         return result.get();
     }
 
+    public User findByUsername(String username) {
+        Optional<User> result = userRepository.findByUsername(username);
+        if (result.isEmpty()) {
+            throw new IllegalArgumentException(String.format("User with username \"%s\" not found.", username));
+        }
+        return result.get();
+    }
     public List<User> findAll() {
         return userRepository.findAll();
     }
@@ -52,5 +60,21 @@ public class UserService {
         if (userDb.isPresent()) {
             throw new IllegalArgumentException("User already exists.");
         }
+    }
+
+    public Authority findAuthorityByAuthority(String authority) {
+        return userRepository.findAuthorityByAuthority(authority);
+    }
+
+    public boolean existsByName(String name) {
+        return userRepository.existsByName(name);
+    }
+
+    public List<Authority> findAuthorities() {
+        return userRepository.findAuthorities();
+    }
+
+    public Authority findAuthorityById(int id) {
+        return userRepository.findAuthorityById(id);
     }
 }
