@@ -1,6 +1,8 @@
 package ru.job4j.cinema.repository;
 
 import org.apache.commons.dbcp2.BasicDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 import ru.job4j.cinema.model.Authority;
 import ru.job4j.cinema.model.User;
@@ -14,6 +16,7 @@ import java.util.Optional;
 public class UserRepository {
 
     private final BasicDataSource pool;
+    private static final Logger LOG = LoggerFactory.getLogger(UserRepository.class.getName());
 
     public UserRepository(BasicDataSource pool) {
         this.pool = pool;
@@ -36,7 +39,7 @@ public class UserRepository {
                 user.setId(id.getInt("id"));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("UserRepository in TicketRepository", e);
         }
         return user;
     }
@@ -53,13 +56,38 @@ public class UserRepository {
                         resultSet.getString("username"),
                         resultSet.getString("email"),
                         resultSet.getString("phone"),
-                        resultSet.getString("password"));
+                        resultSet.getString("password"),
+                        resultSet.getBoolean("enabled"));
                 Authority authority = findAuthorityById(resultSet.getInt("authority_id"));
                 newUser.setAuthority(authority);
                 result = Optional.of(newUser);
             }
         } catch (SQLException e) {
+            LOG.error("UserRepository in TicketRepository", e);
+        }
+        return result;
+    }
 
+    public Optional<User> findByUsername(String username) {
+        Optional<User> result = Optional.empty();
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps = cn.prepareStatement("SELECT * FROM users WHERE username = (?)")) {
+            ps.setString(1, username);
+            ResultSet resultSet = ps.executeQuery();
+            if (resultSet.next()) {
+                User newUser = new User(
+                        resultSet.getInt("id"),
+                        resultSet.getString("username"),
+                        resultSet.getString("email"),
+                        resultSet.getString("phone"),
+                        resultSet.getString("password"),
+                        resultSet.getBoolean("enabled"));
+                Authority authority = findAuthorityById(resultSet.getInt("authority_id"));
+                newUser.setAuthority(authority);
+                result = Optional.of(newUser);
+            }
+        } catch (SQLException e) {
+            LOG.error("UserRepository in TicketRepository", e);
         }
         return result;
     }
@@ -75,13 +103,14 @@ public class UserRepository {
                         resultSet.getString("username"),
                         resultSet.getString("email"),
                         resultSet.getString("phone"),
-                        resultSet.getString("password"));
+                        resultSet.getString("password"),
+                        resultSet.getBoolean("enabled"));
                 Authority authority = findAuthorityById(resultSet.getInt("authority_id"));
                 newUser.setAuthority(authority);
                 result.add(newUser);
             }
         } catch (SQLException e) {
-
+            LOG.error("UserRepository in TicketRepository", e);
         }
         return result;
     }
@@ -108,18 +137,19 @@ public class UserRepository {
                         resultSet.getString("username"),
                         resultSet.getString("email"),
                         resultSet.getString("phone"),
-                        resultSet.getString("password"));
+                        resultSet.getString("password"),
+                        resultSet.getBoolean("enabled"));
                 Authority authority = findAuthorityById(resultSet.getInt("authority_id"));
                 newUser.setAuthority(authority);
                 result = Optional.of(newUser);
             }
         } catch (SQLException e) {
-
+            LOG.error("UserRepository in TicketRepository", e);
         }
         return result;
     }
 
-    private Authority findAuthorityById(int id) {
+    public Authority findAuthorityById(int id) {
         Authority result = null;
         try (Connection cn = pool.getConnection();
              PreparedStatement ps = cn.prepareStatement("SELECT * FROM authorities WHERE id = (?)")) {
@@ -131,7 +161,42 @@ public class UserRepository {
                                 resultSet.getString("authority"));
             }
         } catch (SQLException e) {
+            LOG.error("UserRepository in TicketRepository", e);
+        }
+        return result;
+    }
 
+    public Authority findAuthorityByAuthority(String authority) {
+        Authority result = null;
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps = cn.prepareStatement("SELECT * FROM authorities WHERE authority = (?)")) {
+            ps.setString(1, authority);
+            ResultSet resultSet = ps.executeQuery();
+            if (resultSet.next()) {
+                result = new Authority(
+                        resultSet.getInt("id"),
+                        resultSet.getString("authority"));
+            }
+        } catch (SQLException e) {
+            LOG.error("UserRepository in TicketRepository", e);
+        }
+        return result;
+    }
+
+    public List<Authority> findAuthorities() {
+        List<Authority> result = new ArrayList<>();
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps = cn.prepareStatement("SELECT * FROM authorities")) {
+            ResultSet resultSet = ps.executeQuery();
+            while (resultSet.next()) {
+                result.add(new Authority(
+                        resultSet.getInt("id"),
+                        resultSet.getString("authority")
+                        )
+                );
+            }
+        } catch (SQLException e) {
+            LOG.error("UserRepository in TicketRepository", e);
         }
         return result;
     }
@@ -145,16 +210,33 @@ public class UserRepository {
                                      + "SET username = (?), "
                                      + "email = (?), "
                                      + "phone = (?), "
-                                     + "password = (?) "
+                                     + "password = (?), "
+                                     + "enabled = (?), "
+                                     + "authority_id = (?)"
                                      + "WHERE id = (?)")) {
             ps.setString(1, user.getUsername());
             ps.setString(2, user.getEmail());
             ps.setString(3, user.getPhone());
             ps.setString(4, user.getPassword());
-            ps.setInt(5, user.getId());
+            ps.setBoolean(5, user.isEnabled());
+            ps.setInt(6, user.getAuthority().getId());
+            ps.setInt(7, user.getId());
             result = ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("UserRepository in TicketRepository", e);
+        }
+        return result;
+    }
+
+    public boolean existsByName(String name) {
+        boolean result = false;
+        try (Connection cn = pool.getConnection();
+        PreparedStatement ps = cn.prepareStatement("SELECT id FROM users WHERE username = (?)")) {
+            ps.setString(1, name);
+            ResultSet resultSet = ps.executeQuery();
+            result = resultSet.next();
+        } catch (SQLException e) {
+            LOG.error("UserRepository in TicketRepository", e);
         }
         return result;
     }
@@ -166,7 +248,7 @@ public class UserRepository {
             ps.setInt(1, user.getId());
             result = ps.executeUpdate() > 0;
         } catch (SQLException e) {
-
+            LOG.error("UserRepository in TicketRepository", e);
         }
         return result;
     }
@@ -176,7 +258,7 @@ public class UserRepository {
              PreparedStatement ps = cn.prepareStatement("DELETE FROM users")) {
             ps.executeUpdate();
         } catch (SQLException e) {
-
+            LOG.error("UserRepository in TicketRepository", e);
         }
     }
 }

@@ -1,6 +1,8 @@
 package ru.job4j.cinema.repository;
 
 import org.apache.commons.dbcp2.BasicDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 import ru.job4j.cinema.model.CinemaHall;
 
@@ -13,6 +15,7 @@ import java.util.Optional;
 public class CinemaHallRepository {
 
     private final BasicDataSource pool;
+    private static final Logger LOG = LoggerFactory.getLogger(CinemaHallRepository.class.getName());
 
     public CinemaHallRepository(BasicDataSource pool) {
         this.pool = pool;
@@ -34,7 +37,7 @@ public class CinemaHallRepository {
                 cinemaHall.setId(id.getInt("id"));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+           LOG.error("Exception in CinemaHallRepository", e);
         }
         return cinemaHall;
     }
@@ -42,7 +45,7 @@ public class CinemaHallRepository {
     public List<CinemaHall> findAll() {
         List<CinemaHall> result = new ArrayList<>();
         try (Connection cn = pool.getConnection();
-            PreparedStatement ps = cn.prepareStatement("SELECT * FROM cinema_hall")) {
+            PreparedStatement ps = cn.prepareStatement("SELECT * FROM cinema_hall ORDER BY id")) {
             ResultSet resultSet = ps.executeQuery();
             while (resultSet.next()) {
                 result.add(
@@ -55,7 +58,7 @@ public class CinemaHallRepository {
                 );
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("Exception in CinemaHallRepository", e);
         }
         return result;
     }
@@ -77,7 +80,7 @@ public class CinemaHallRepository {
                 );
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("Exception in CinemaHallRepository", e);
         }
         return result;
     }
@@ -99,7 +102,7 @@ public class CinemaHallRepository {
                 );
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("Exception in CinemaHallRepository", e);
         }
         return result;
     }
@@ -119,7 +122,7 @@ public class CinemaHallRepository {
             ps.setInt(4, cinemaHall.getId());
             result = ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("Exception in CinemaHallRepository", e);
         }
         return result;
     }
@@ -131,7 +134,7 @@ public class CinemaHallRepository {
             ps.setInt(1, cinemaHall.getId());
             result = ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("Exception in CinemaHallRepository", e);
         }
         return result;
     }
@@ -141,7 +144,7 @@ public class CinemaHallRepository {
              PreparedStatement ps = cn.prepareStatement("DELETE FROM cinema_hall")) {
             ps.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("Exception in CinemaHallRepository", e);
         }
     }
 }

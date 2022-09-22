@@ -1,6 +1,8 @@
 package ru.job4j.cinema.repository;
 
 import org.apache.commons.dbcp2.BasicDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 import ru.job4j.cinema.model.Genre;
 import ru.job4j.cinema.model.Movie;
@@ -13,6 +15,7 @@ import java.util.*;
 public class MovieRepository {
 
     private final BasicDataSource pool;
+    private static final Logger LOG = LoggerFactory.getLogger(MovieRepository.class.getName());
 
     public MovieRepository(BasicDataSource pool) {
         this.pool = pool;
@@ -21,7 +24,7 @@ public class MovieRepository {
     public List<Movie> findAll() {
         List<Movie> result = new ArrayList<>();
         try (Connection cn = pool.getConnection();
-             PreparedStatement ps = cn.prepareStatement("SELECT * FROM movie")) {
+             PreparedStatement ps = cn.prepareStatement("SELECT * FROM movie ORDER BY id")) {
             ResultSet resultSet = ps.executeQuery();
             while (resultSet.next()) {
                 Movie movie = new Movie(
@@ -36,7 +39,7 @@ public class MovieRepository {
                 result.add(movie);
             }
         } catch (SQLException e) {
-
+            LOG.error("Exception in MovieRepository", e);
         }
         return result;
     }
@@ -60,7 +63,7 @@ public class MovieRepository {
                 result = Optional.of(movie);
             }
         } catch (SQLException e) {
-
+            LOG.error("Exception in MovieRepository", e);
         }
         return result;
     }
@@ -85,7 +88,7 @@ public class MovieRepository {
                 result = Optional.of(movie);
             }
         } catch (SQLException e) {
-
+            LOG.error("Exception in MovieRepository", e);
         }
         return result;
     }
@@ -113,15 +116,15 @@ public class MovieRepository {
                 genrePS.setInt(2, genre.getId());
                 genrePS.addBatch();
             }
-            ps.executeBatch();
+            genrePS.executeBatch();
             cn.commit();
         } catch (SQLException e) {
-
+            LOG.error("Exception in MovieRepository", e);
         }
         return movie;
     }
 
-    private Set<Genre> findGenresByMovie(Movie movie) {
+    public Set<Genre> findGenresByMovie(Movie movie) {
         Set<Genre> result = new HashSet<>();
         try (Connection cn = pool.getConnection();
              PreparedStatement ps = cn.prepareStatement(
@@ -131,6 +134,7 @@ public class MovieRepository {
                              + "FROM movie_genre AS mg "
                              + "JOIN genre AS g ON mg.genre_id = g.id "
                              + "WHERE mg.movie_id = (?)")) {
+            ps.setInt(1, movie.getId());
             ResultSet resultSet = ps.executeQuery();
             while (resultSet.next()) {
                 result.add(
@@ -141,7 +145,7 @@ public class MovieRepository {
                 );
             }
         } catch (SQLException e) {
-
+            LOG.error("Exception in MovieRepository", e);
         }
         return result;
     }
@@ -153,7 +157,7 @@ public class MovieRepository {
             ps.setInt(1, movie.getId());
             result = ps.executeUpdate() > 0;
         } catch (SQLException e) {
-
+            LOG.error("Exception in MovieRepository", e);
         }
         return result;
     }
@@ -180,14 +184,14 @@ public class MovieRepository {
             result = ps.executeUpdate() > 0;
             updateGenresInMovie(movie);
         } catch (SQLException e) {
-
+            LOG.error("Exception in MovieRepository", e);
         }
         return result;
     }
 
     private void updateGenresInMovie(Movie movie) {
         try (Connection cn = pool.getConnection();
-        PreparedStatement ps = cn.prepareStatement("DELETE FROM movie_genre WHERE movie_id = (?)")) {
+            PreparedStatement ps = cn.prepareStatement("DELETE FROM movie_genre WHERE movie_id = (?)")) {
             ps.setInt(1, movie.getId());
             ps.executeUpdate();
             cn.setAutoCommit(false);
@@ -197,10 +201,10 @@ public class MovieRepository {
                 genrePS.setInt(2, genre.getId());
                 genrePS.addBatch();
             }
-            ps.executeBatch();
+            genrePS.executeBatch();
             cn.commit();
         } catch (SQLException e) {
-
+            LOG.error("Exception in MovieRepository", e);
         }
     }
 
@@ -209,7 +213,22 @@ public class MovieRepository {
              PreparedStatement ps = cn.prepareStatement("DELETE FROM movie")) {
             ps.executeUpdate();
         } catch (SQLException e) {
-
+            LOG.error("Exception in MovieRepository", e);
         }
+    }
+
+    public byte[] getMoviePosterById(int id) {
+        byte[] result = new byte[0];
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps = cn.prepareStatement("SELECT poster FROM movie WHERE movie.id = (?)")) {
+            ps.setInt(1, id);
+            ResultSet resultSet = ps.executeQuery();
+            if (resultSet.next()) {
+                result = resultSet.getBytes("poster");
+            }
+        } catch (SQLException e) {
+            LOG.error("Exception in MovieRepository", e);
+        }
+        return result;
     }
 }

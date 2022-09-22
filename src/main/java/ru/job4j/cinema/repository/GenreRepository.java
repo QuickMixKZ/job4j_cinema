@@ -1,6 +1,8 @@
 package ru.job4j.cinema.repository;
 
 import org.apache.commons.dbcp2.BasicDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 import ru.job4j.cinema.model.Genre;
 
@@ -13,6 +15,7 @@ import java.util.Optional;
 public class GenreRepository {
 
     private final BasicDataSource pool;
+    private static final Logger LOG = LoggerFactory.getLogger(GenreRepository.class.getName());
 
     public GenreRepository(BasicDataSource pool) {
         this.pool = pool;
@@ -31,7 +34,7 @@ public class GenreRepository {
                 result.add(genre);
             }
         } catch (SQLException e) {
-
+            LOG.error("Exception in GenreRepository", e);
         }
         return result;
     }
@@ -48,7 +51,7 @@ public class GenreRepository {
                 }
             }
         } catch (SQLException e) {
-
+            LOG.error("Exception in GenreRepository", e);
         }
         return genre;
     }
@@ -68,7 +71,7 @@ public class GenreRepository {
                 );
             }
         } catch (SQLException e) {
-
+            LOG.error("Exception in GenreRepository", e);
         }
         return result;
     }
@@ -88,7 +91,7 @@ public class GenreRepository {
                 );
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            LOG.error("Exception in GenreRepository", e);
         }
         return result;
     }
@@ -101,7 +104,7 @@ public class GenreRepository {
             ps.setInt(2, genre.getId());
             result = ps.executeUpdate() > 0;
         } catch (SQLException e) {
-
+            LOG.error("Exception in GenreRepository", e);
         }
         return result;
     }
@@ -113,7 +116,7 @@ public class GenreRepository {
             ps.setInt(1, genre.getId());
             result = ps.executeUpdate() > 0;
         } catch (SQLException e) {
-
+            LOG.error("Exception in GenreRepository", e);
         }
         return result;
     }
@@ -123,7 +126,7 @@ public class GenreRepository {
              PreparedStatement ps = cn.prepareStatement("DELETE FROM genre")) {
             ps.executeUpdate();
         } catch (SQLException e) {
-
+            LOG.error("Exception in GenreRepository", e);
         }
     }
 }
