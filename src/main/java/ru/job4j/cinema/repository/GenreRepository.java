@@ -16,6 +16,13 @@ public class GenreRepository {
 
     private final BasicDataSource pool;
     private static final Logger LOG = LoggerFactory.getLogger(GenreRepository.class.getName());
+    private static final String SELECT_QUERY = "SELECT * FROM genre";
+    private static final String INSERT_QUERY = "INSERT INTO genre(name) VALUES(?)";
+    private static final String SELECT_BY_ID_QUERY = "SELECT * FROM genre WHERE id = (?)";
+    private static final String SELECT_BY_NAME_QUERY = "SELECT * FROM genre WHERE name = (?)";
+    private static final String UPDATE_QUERY = "UPDATE genre SET name = (?) WHERE id = (?)";
+    private static final String DELETE_BY_ID_QUERY = "DELETE FROM genre WHERE id = (?)";
+    private static final String DELETE_ALL_QUERY = "DELETE FROM genre";
 
     public GenreRepository(BasicDataSource pool) {
         this.pool = pool;
@@ -24,7 +31,7 @@ public class GenreRepository {
     public List<Genre> findAll() {
         List<Genre> result = new ArrayList<>();
         try (Connection cn = pool.getConnection();
-            PreparedStatement ps = cn.prepareStatement("SELECT * FROM genre")) {
+            PreparedStatement ps = cn.prepareStatement(SELECT_QUERY)) {
             ResultSet resultSet = ps.executeQuery();
             while (resultSet.next()) {
                 Genre genre = new Genre(
@@ -41,7 +48,7 @@ public class GenreRepository {
 
     public Genre add(Genre genre) {
         try (Connection cn = pool.getConnection();
-             PreparedStatement ps = cn.prepareStatement("INSERT INTO genre(name) VALUES(?)",
+             PreparedStatement ps = cn.prepareStatement(INSERT_QUERY,
                      Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, genre.getName());
             ps.execute();
@@ -59,7 +66,7 @@ public class GenreRepository {
     public Optional<Genre> findById(int id) {
         Optional<Genre> result = Optional.empty();
         try (Connection cn = pool.getConnection();
-             PreparedStatement ps = cn.prepareStatement("SELECT * FROM genre WHERE id = (?)")) {
+             PreparedStatement ps = cn.prepareStatement(SELECT_BY_ID_QUERY)) {
             ps.setInt(1, id);
             ResultSet resultSet = ps.executeQuery();
             if (resultSet.next()) {
@@ -79,7 +86,7 @@ public class GenreRepository {
     public Optional<Genre> findByName(String name) {
         Optional<Genre> result = Optional.empty();
         try (Connection cn = pool.getConnection();
-             PreparedStatement ps = cn.prepareStatement("SELECT * FROM genre WHERE name = (?)")) {
+             PreparedStatement ps = cn.prepareStatement(SELECT_BY_NAME_QUERY)) {
             ps.setString(1, name);
             ResultSet resultSet = ps.executeQuery();
             if (resultSet.next()) {
@@ -99,7 +106,7 @@ public class GenreRepository {
     public boolean update(Genre genre) {
         boolean result = false;
         try (Connection cn = pool.getConnection();
-            PreparedStatement ps = cn.prepareStatement("UPDATE genre SET name = (?) WHERE id = (?)")) {
+            PreparedStatement ps = cn.prepareStatement(UPDATE_QUERY)) {
             ps.setString(1, genre.getName());
             ps.setInt(2, genre.getId());
             result = ps.executeUpdate() > 0;
@@ -112,7 +119,7 @@ public class GenreRepository {
     public boolean delete(Genre genre) {
         boolean result = false;
         try (Connection cn = pool.getConnection();
-             PreparedStatement ps = cn.prepareStatement("DELETE FROM genre WHERE id = (?)")) {
+             PreparedStatement ps = cn.prepareStatement(DELETE_BY_ID_QUERY)) {
             ps.setInt(1, genre.getId());
             result = ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -123,7 +130,7 @@ public class GenreRepository {
 
     public void deleteAll() {
         try (Connection cn = pool.getConnection();
-             PreparedStatement ps = cn.prepareStatement("DELETE FROM genre")) {
+             PreparedStatement ps = cn.prepareStatement(DELETE_ALL_QUERY)) {
             ps.executeUpdate();
         } catch (SQLException e) {
             LOG.error("Exception in GenreRepository", e);

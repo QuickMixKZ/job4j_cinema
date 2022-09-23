@@ -16,6 +16,28 @@ public class MovieRepository {
 
     private final BasicDataSource pool;
     private static final Logger LOG = LoggerFactory.getLogger(MovieRepository.class.getName());
+    private static final String SELECT_QUERY = "SELECT * FROM movie ORDER BY id";
+    private static final String INSERT_QUERY = "INSERT INTO movie(name, description, year, poster, duration) VALUES (?, ?, ?, ?, ?)";
+    private static final String INSERT_GENRE_QUERY = "INSERT INTO movie_genre(movie_id, genre_id) VALUES(?, ?)";
+    private static final String SELECT_BY_ID_QUERY = "SELECT * FROM movie WHERE id = (?)";
+    private static final String SELECT_BY_NAME_AND_YEAR_QUERY = "SELECT * FROM movie WHERE name = (?) AND year = (?)";
+    private static final String SELECT_GENRE_BY_MOVIE_QUERY = "SELECT "
+            + "g.id AS id, "
+            + "g.name AS name "
+            + "FROM movie_genre AS mg "
+            + "JOIN genre AS g ON mg.genre_id = g.id "
+            + "WHERE mg.movie_id = (?)";
+    private static final String DELETE_BY_ID_QUERY = "DELETE FROM movie WHERE id = (?)";
+    private static final String UPDATE_QUERY = "UPDATE movie "
+            + "SET name = (?), "
+            + "description = (?), "
+            + "year = (?), "
+            + "poster = (?),"
+            + "duration = (?)"
+            + "WHERE id = (?)";
+    private static final String DELETE_GENRE_BY_MOVIE_ID_QUERY = "DELETE FROM movie_genre WHERE movie_id = (?)";
+    private static final String DELETE_ALL_QUERY = "DELETE FROM movie";
+    private static final String SELECT_POSTER_BY_MOVIE_ID_QUERY = "SELECT poster FROM movie WHERE movie.id = (?)";
 
     public MovieRepository(BasicDataSource pool) {
         this.pool = pool;
@@ -24,7 +46,7 @@ public class MovieRepository {
     public List<Movie> findAll() {
         List<Movie> result = new ArrayList<>();
         try (Connection cn = pool.getConnection();
-             PreparedStatement ps = cn.prepareStatement("SELECT * FROM movie ORDER BY id")) {
+             PreparedStatement ps = cn.prepareStatement(SELECT_QUERY)) {
             ResultSet resultSet = ps.executeQuery();
             while (resultSet.next()) {
                 Movie movie = new Movie(
@@ -47,7 +69,7 @@ public class MovieRepository {
     public Optional<Movie> findById(int id) {
         Optional<Movie> result = Optional.empty();
         try (Connection cn = pool.getConnection();
-             PreparedStatement ps = cn.prepareStatement("SELECT * FROM movie WHERE id = (?)")) {
+             PreparedStatement ps = cn.prepareStatement(SELECT_BY_ID_QUERY)) {
             ps.setInt(1, id);
             ResultSet resultSet = ps.executeQuery();
             if (resultSet.next()) {
@@ -71,7 +93,7 @@ public class MovieRepository {
     public Optional<Movie> findByNameAndYear(String name, int year) {
         Optional<Movie> result = Optional.empty();
         try (Connection cn = pool.getConnection();
-             PreparedStatement ps = cn.prepareStatement("SELECT * FROM movie WHERE name = (?) AND year = (?)")) {
+             PreparedStatement ps = cn.prepareStatement(SELECT_BY_NAME_AND_YEAR_QUERY)) {
             ps.setString(1, name);
             ps.setInt(2, year);
             ResultSet resultSet = ps.executeQuery();
@@ -95,8 +117,7 @@ public class MovieRepository {
 
     public Movie add(Movie movie) {
         try (Connection cn = pool.getConnection();
-             PreparedStatement ps = cn.prepareStatement(
-                     "INSERT INTO movie(name, description, year, poster, duration) VALUES (?, ?, ?, ?, ?)",
+             PreparedStatement ps = cn.prepareStatement(INSERT_QUERY,
                      Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, movie.getName());
             ps.setString(2, movie.getDescription());
@@ -110,7 +131,7 @@ public class MovieRepository {
                 }
             }
             cn.setAutoCommit(false);
-            PreparedStatement genrePS = cn.prepareStatement("INSERT INTO movie_genre(movie_id, genre_id) VALUES(?, ?)");
+            PreparedStatement genrePS = cn.prepareStatement(INSERT_GENRE_QUERY);
             for (Genre genre : movie.getGenres()) {
                 genrePS.setInt(1, movie.getId());
                 genrePS.setInt(2, genre.getId());
@@ -127,13 +148,7 @@ public class MovieRepository {
     public Set<Genre> findGenresByMovie(Movie movie) {
         Set<Genre> result = new HashSet<>();
         try (Connection cn = pool.getConnection();
-             PreparedStatement ps = cn.prepareStatement(
-                     "SELECT "
-                             + "g.id AS id, "
-                             + "g.name AS name "
-                             + "FROM movie_genre AS mg "
-                             + "JOIN genre AS g ON mg.genre_id = g.id "
-                             + "WHERE mg.movie_id = (?)")) {
+             PreparedStatement ps = cn.prepareStatement(SELECT_GENRE_BY_MOVIE_QUERY)) {
             ps.setInt(1, movie.getId());
             ResultSet resultSet = ps.executeQuery();
             while (resultSet.next()) {
@@ -153,7 +168,7 @@ public class MovieRepository {
     public boolean delete(Movie movie) {
         boolean result = false;
         try (Connection cn = pool.getConnection();
-             PreparedStatement ps = cn.prepareStatement("DELETE FROM movie WHERE id = (?)")) {
+             PreparedStatement ps = cn.prepareStatement(DELETE_BY_ID_QUERY)) {
             ps.setInt(1, movie.getId());
             result = ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -166,14 +181,7 @@ public class MovieRepository {
         boolean result = false;
         try (Connection cn = pool.getConnection();
              PreparedStatement ps =
-                     cn.prepareStatement(
-                             "UPDATE movie "
-                                     + "SET name = (?), "
-                                     + "description = (?), "
-                                     + "year = (?), "
-                                     + "poster = (?),"
-                                     + "duration = (?)"
-                                     + "WHERE id = (?)")) {
+                     cn.prepareStatement(UPDATE_QUERY)) {
             ps.setString(1, movie.getName());
             ps.setString(2, movie.getDescription());
             ps.setInt(3, movie.getYear());
@@ -191,11 +199,11 @@ public class MovieRepository {
 
     private void updateGenresInMovie(Movie movie) {
         try (Connection cn = pool.getConnection();
-            PreparedStatement ps = cn.prepareStatement("DELETE FROM movie_genre WHERE movie_id = (?)")) {
+            PreparedStatement ps = cn.prepareStatement(DELETE_GENRE_BY_MOVIE_ID_QUERY)) {
             ps.setInt(1, movie.getId());
             ps.executeUpdate();
             cn.setAutoCommit(false);
-            PreparedStatement genrePS = cn.prepareStatement("INSERT INTO movie_genre(movie_id, genre_id) VALUES(?, ?)");
+            PreparedStatement genrePS = cn.prepareStatement(INSERT_GENRE_QUERY);
             for (Genre genre : movie.getGenres()) {
                 genrePS.setInt(1, movie.getId());
                 genrePS.setInt(2, genre.getId());
@@ -210,7 +218,7 @@ public class MovieRepository {
 
     public void deleteAll() {
         try (Connection cn = pool.getConnection();
-             PreparedStatement ps = cn.prepareStatement("DELETE FROM movie")) {
+             PreparedStatement ps = cn.prepareStatement(DELETE_ALL_QUERY)) {
             ps.executeUpdate();
         } catch (SQLException e) {
             LOG.error("Exception in MovieRepository", e);
@@ -220,7 +228,7 @@ public class MovieRepository {
     public byte[] getMoviePosterById(int id) {
         byte[] result = new byte[0];
         try (Connection cn = pool.getConnection();
-             PreparedStatement ps = cn.prepareStatement("SELECT poster FROM movie WHERE movie.id = (?)")) {
+             PreparedStatement ps = cn.prepareStatement(SELECT_POSTER_BY_MOVIE_ID_QUERY)) {
             ps.setInt(1, id);
             ResultSet resultSet = ps.executeQuery();
             if (resultSet.next()) {

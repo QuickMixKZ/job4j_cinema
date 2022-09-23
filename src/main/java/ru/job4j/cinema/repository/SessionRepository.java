@@ -19,6 +19,113 @@ public class SessionRepository {
     private final BasicDataSource pool;
     private final MovieRepository movieRepository;
     private static final Logger LOG = LoggerFactory.getLogger(SessionRepository.class.getName());
+    private static final String SELECT_QUERY = "SELECT "
+            + "movie.id AS movie_id, "
+            + "movie.name AS movie_name, "
+            + "movie.description AS movie_description, "
+            + "movie.duration AS movie_duration, "
+            + "movie.poster AS movie_poster, "
+            + "movie.year AS movie_year, "
+            + "sessions.id AS sessions_id, "
+            + "sessions.movie_id AS sessions_movie_id, "
+            + "sessions.cinema_hall_id AS sessions_cinema_hall_id, "
+            + "sessions.start_date AS sessions_start_date, "
+            + "cinema_hall.id AS cinema_hall_id, "
+            + "cinema_hall.name AS cinema_hall_name, "
+            + "cinema_hall.rows_number AS cinema_hall_rows_number, "
+            + "cinema_hall.seats_per_row AS cinema_hall_seats_per_row "
+            + "FROM "
+            + "sessions "
+            + "JOIN movie ON sessions.movie_id = movie.id "
+            + "JOIN cinema_hall ON sessions.cinema_hall_id = cinema_hall.id "
+            + "ORDER BY sessions.id";
+    private static final String INSERT_QUERY = "INSERT INTO sessions(movie_id, cinema_hall_id, start_date) VALUES (?, ?, ?)";
+    private static final String SELECT_BY_ID_QUERY = "SELECT "
+            + "movie.id AS movie_id, "
+            + "movie.name AS movie_name, "
+            + "movie.description AS movie_description, "
+            + "movie.duration AS movie_duration, "
+            + "movie.poster AS movie_poster, "
+            + "movie.year AS movie_year, "
+            + "sessions.id AS sessions_id, "
+            + "sessions.movie_id AS sessions_movie_id, "
+            + "sessions.cinema_hall_id AS sessions_cinema_hall_id, "
+            + "sessions.start_date AS sessions_start_date, "
+            + "cinema_hall.id AS cinema_hall_id, "
+            + "cinema_hall.name AS cinema_hall_name, "
+            + "cinema_hall.rows_number AS cinema_hall_rows_number, "
+            + "cinema_hall.seats_per_row AS cinema_hall_seats_per_row "
+            + "FROM "
+            + "sessions "
+            + "JOIN movie ON sessions.movie_id = movie.id "
+            + "JOIN cinema_hall ON sessions.cinema_hall_id = cinema_hall.id "
+            + "WHERE sessions.id = (?)";
+    private static final String UPDATE_QUERY = "UPDATE sessions "
+            + "SET movie_id = (?), "
+            + "cinema_hall_id = (?), "
+            + "start_date = (?) "
+            + "WHERE id = (?)";
+    private static final String DELETE_BY_ID_QUERY = "DELETE FROM sessions WHERE id = (?)";
+    private static final String SELECT_TODAY_MOVIES_QUERY = "SELECT DISTINCT "
+            + "movie.* "
+            + "FROM "
+            + "sessions "
+            + "JOIN movie ON sessions.movie_id = movie.id "
+            + "WHERE sessions.start_date > now() "
+            + "AND sessions.start_date < (date_trunc('day', now()) + interval '30 hour')";
+    private static final String SELECT_BY_MOVIE_ID_QUERY = "SELECT "
+            + "movie.id AS movie_id, "
+            + "movie.name AS movie_name, "
+            + "movie.description AS movie_description, "
+            + "movie.duration AS movie_duration, "
+            + "movie.poster AS movie_poster, "
+            + "movie.year AS movie_year, "
+            + "sessions.id AS sessions_id, "
+            + "sessions.movie_id AS sessions_movie_id, "
+            + "sessions.cinema_hall_id AS cinema_hall_id, "
+            + "sessions.start_date AS sessions_start_date, "
+            + "cinema_hall.name AS cinema_hall_name, "
+            + "cinema_hall.rows_number AS cinema_hall_rows_number, "
+            + "cinema_hall.seats_per_row AS cinema_hall_seats_per_row "
+            + "FROM "
+            + "sessions "
+            + "JOIN movie ON sessions.movie_id = movie.id "
+            + "JOIN cinema_hall ON sessions.cinema_hall_id = cinema_hall.id "
+            + "WHERE sessions.movie_id = (?)";
+    private static final String SELECT_TODAY_MOVIE_BY_ID_QUERY = "SELECT "
+            + "movie.id AS movie_id, "
+            + "movie.name AS movie_name, "
+            + "movie.description AS movie_description, "
+            + "movie.duration AS movie_duration, "
+            + "movie.poster AS movie_poster, "
+            + "movie.year AS movie_year, "
+            + "sessions.id AS sessions_id, "
+            + "sessions.movie_id AS sessions_movie_id, "
+            + "sessions.cinema_hall_id AS cinema_hall_id, "
+            + "sessions.start_date AS sessions_start_date, "
+            + "cinema_hall.name AS cinema_hall_name, "
+            + "cinema_hall.rows_number AS cinema_hall_rows_number, "
+            + "cinema_hall.seats_per_row AS cinema_hall_seats_per_row "
+            + "FROM "
+            + "sessions "
+            + "JOIN movie ON sessions.movie_id = movie.id "
+            + "JOIN cinema_hall ON sessions.cinema_hall_id = cinema_hall.id "
+            + "WHERE sessions.movie_id = (?) "
+            + "AND sessions.start_date > now() "
+            + "AND sessions.start_date < (date_trunc('day', now()) + interval '30 hour')";
+    private static final String SELECT_CINEMAHALL_BY_SESSION_ID_QUERY = "SELECT "
+            + "cinema_hall.rows_number, "
+            + "cinema_hall.seats_per_row "
+            + "FROM sessions "
+            + "JOIN cinema_hall ON sessions.cinema_hall_id = cinema_hall.id "
+            + "WHERE sessions.id = (?)";
+    private static final String SELECT_TICKETS_BY_SESSION_ID_QUERY = "SELECT "
+            + "ticket.pos_row, "
+            + "ticket.seat "
+            + "FROM sessions "
+            + "JOIN ticket ON sessions.id = ticket.session_id "
+            + "WHERE sessions.id = (?)";
+    private static final String DELETE_ALL_QUERY = "DELETE FROM sessions";
 
     public SessionRepository(BasicDataSource pool, MovieRepository movieRepository) {
         this.pool = pool;
@@ -27,8 +134,7 @@ public class SessionRepository {
 
     public Session add(Session session) {
         try (Connection cn = pool.getConnection();
-             PreparedStatement ps = cn.prepareStatement(
-                     "INSERT INTO sessions(movie_id, cinema_hall_id, start_date) VALUES (?, ?, ?)",
+             PreparedStatement ps = cn.prepareStatement(INSERT_QUERY,
                      Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, session.getMovie().getId());
             ps.setInt(2, session.getCinemaHall().getId());
@@ -48,27 +154,7 @@ public class SessionRepository {
     public List<Session> findAll() {
         List<Session> result = new ArrayList<>();
         try (Connection cn = pool.getConnection();
-             PreparedStatement ps = cn.prepareStatement(
-                     "SELECT "
-                             + "movie.id AS movie_id, "
-                             + "movie.name AS movie_name, "
-                             + "movie.description AS movie_description, "
-                             + "movie.duration AS movie_duration, "
-                             + "movie.poster AS movie_poster, "
-                             + "movie.year AS movie_year, "
-                             + "sessions.id AS sessions_id, "
-                             + "sessions.movie_id AS sessions_movie_id, "
-                             + "sessions.cinema_hall_id AS sessions_cinema_hall_id, "
-                             + "sessions.start_date AS sessions_start_date, "
-                             + "cinema_hall.id AS cinema_hall_id, "
-                             + "cinema_hall.name AS cinema_hall_name, "
-                             + "cinema_hall.rows_number AS cinema_hall_rows_number, "
-                             + "cinema_hall.seats_per_row AS cinema_hall_seats_per_row "
-                             + "FROM "
-                             + "sessions "
-                             + "JOIN movie ON sessions.movie_id = movie.id "
-                             + "JOIN cinema_hall ON sessions.cinema_hall_id = cinema_hall.id "
-                             + "ORDER BY sessions.id")) {
+             PreparedStatement ps = cn.prepareStatement(SELECT_QUERY)) {
             ResultSet resultSet = ps.executeQuery();
             while (resultSet.next()) {
                 result.add(createSessionFromResultSet(resultSet));
@@ -83,26 +169,7 @@ public class SessionRepository {
         Optional<Session> result = Optional.empty();
         try (Connection cn = pool.getConnection();
              PreparedStatement ps = cn.prepareStatement(
-                     "SELECT "
-                             + "movie.id AS movie_id, "
-                             + "movie.name AS movie_name, "
-                             + "movie.description AS movie_description, "
-                             + "movie.duration AS movie_duration, "
-                             + "movie.poster AS movie_poster, "
-                             + "movie.year AS movie_year, "
-                             + "sessions.id AS sessions_id, "
-                             + "sessions.movie_id AS sessions_movie_id, "
-                             + "sessions.cinema_hall_id AS sessions_cinema_hall_id, "
-                             + "sessions.start_date AS sessions_start_date, "
-                             + "cinema_hall.id AS cinema_hall_id, "
-                             + "cinema_hall.name AS cinema_hall_name, "
-                             + "cinema_hall.rows_number AS cinema_hall_rows_number, "
-                             + "cinema_hall.seats_per_row AS cinema_hall_seats_per_row "
-                             + "FROM "
-                             + "sessions "
-                             + "JOIN movie ON sessions.movie_id = movie.id "
-                             + "JOIN cinema_hall ON sessions.cinema_hall_id = cinema_hall.id "
-                             + "WHERE sessions.id = (?)")) {
+                     SELECT_BY_ID_QUERY)) {
             ps.setInt(1, id);
             ResultSet resultSet = ps.executeQuery();
             if (resultSet.next()) {
@@ -118,12 +185,7 @@ public class SessionRepository {
         boolean result = false;
         try (Connection cn = pool.getConnection();
              PreparedStatement ps =
-                     cn.prepareStatement(
-                             "UPDATE sessions "
-                                     + "SET movie_id = (?), "
-                                     + "cinema_hall_id = (?), "
-                                     + "start_date = (?) "
-                                     + "WHERE id = (?)")) {
+                     cn.prepareStatement(UPDATE_QUERY)) {
             ps.setInt(1, session.getMovie().getId());
             ps.setInt(2, session.getCinemaHall().getId());
             ps.setTimestamp(3, Timestamp.valueOf(session.getDate()));
@@ -138,7 +200,7 @@ public class SessionRepository {
     public boolean delete(Session session) {
         boolean result = false;
         try (Connection cn = pool.getConnection();
-             PreparedStatement ps = cn.prepareStatement("DELETE FROM sessions WHERE id = (?)")) {
+             PreparedStatement ps = cn.prepareStatement(DELETE_BY_ID_QUERY)) {
             ps.setInt(1, session.getId());
             result = ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -151,13 +213,7 @@ public class SessionRepository {
         List<Movie> result = new ArrayList<>();
         try (Connection cn = pool.getConnection();
              PreparedStatement ps = cn.prepareStatement(
-                     "SELECT DISTINCT "
-                             + "movie.* "
-                             + "FROM "
-                             + "sessions "
-                             + "JOIN movie ON sessions.movie_id = movie.id "
-                             + "WHERE sessions.start_date > now() "
-                             + "AND sessions.start_date < (date_trunc('day', now()) + interval '30 hour')")) {
+                     SELECT_TODAY_MOVIES_QUERY)) {
             ResultSet resultSet = ps.executeQuery();
             while (resultSet.next()) {
                 Movie movie = new Movie(
@@ -181,25 +237,7 @@ public class SessionRepository {
         List<Session> result = new ArrayList<>();
         try (Connection cn = pool.getConnection();
              PreparedStatement ps = cn.prepareStatement(
-                     "SELECT "
-                             + "movie.id AS movie_id, "
-                             + "movie.name AS movie_name, "
-                             + "movie.description AS movie_description, "
-                             + "movie.duration AS movie_duration, "
-                             + "movie.poster AS movie_poster, "
-                             + "movie.year AS movie_year, "
-                             + "sessions.id AS sessions_id, "
-                             + "sessions.movie_id AS sessions_movie_id, "
-                             + "sessions.cinema_hall_id AS cinema_hall_id, "
-                             + "sessions.start_date AS sessions_start_date, "
-                             + "cinema_hall.name AS cinema_hall_name, "
-                             + "cinema_hall.rows_number AS cinema_hall_rows_number, "
-                             + "cinema_hall.seats_per_row AS cinema_hall_seats_per_row "
-                             + "FROM "
-                             + "sessions "
-                             + "JOIN movie ON sessions.movie_id = movie.id "
-                             + "JOIN cinema_hall ON sessions.cinema_hall_id = cinema_hall.id "
-                             + "WHERE sessions.movie_id = (?)")) {
+                     SELECT_BY_MOVIE_ID_QUERY)) {
             ps.setInt(1, movieId);
             ResultSet resultSet = ps.executeQuery();
             while (resultSet.next()) {
@@ -215,27 +253,7 @@ public class SessionRepository {
         List<Session> result = new ArrayList<>();
         try (Connection cn = pool.getConnection();
              PreparedStatement ps = cn.prepareStatement(
-                     "SELECT "
-                             + "movie.id AS movie_id, "
-                             + "movie.name AS movie_name, "
-                             + "movie.description AS movie_description, "
-                             + "movie.duration AS movie_duration, "
-                             + "movie.poster AS movie_poster, "
-                             + "movie.year AS movie_year, "
-                             + "sessions.id AS sessions_id, "
-                             + "sessions.movie_id AS sessions_movie_id, "
-                             + "sessions.cinema_hall_id AS cinema_hall_id, "
-                             + "sessions.start_date AS sessions_start_date, "
-                             + "cinema_hall.name AS cinema_hall_name, "
-                             + "cinema_hall.rows_number AS cinema_hall_rows_number, "
-                             + "cinema_hall.seats_per_row AS cinema_hall_seats_per_row "
-                             + "FROM "
-                             + "sessions "
-                             + "JOIN movie ON sessions.movie_id = movie.id "
-                             + "JOIN cinema_hall ON sessions.cinema_hall_id = cinema_hall.id "
-                             + "WHERE sessions.movie_id = (?) "
-                             + "AND sessions.start_date > now() "
-                             + "AND sessions.start_date < (date_trunc('day', now()) + interval '30 hour')")) {
+                     SELECT_TODAY_MOVIE_BY_ID_QUERY)) {
             ps.setInt(1, movieId);
             ResultSet resultSet = ps.executeQuery();
             while (resultSet.next()) {
@@ -251,12 +269,7 @@ public class SessionRepository {
         boolean[][] result = new boolean[0][0];
         try (Connection cn = pool.getConnection();
         PreparedStatement ps = cn.prepareStatement(
-                "SELECT "
-                        + "cinema_hall.rows_number, "
-                        + "cinema_hall.seats_per_row "
-                        + "FROM sessions "
-                        + "JOIN cinema_hall ON sessions.cinema_hall_id = cinema_hall.id "
-                        + "WHERE sessions.id = (?)")) {
+                SELECT_CINEMAHALL_BY_SESSION_ID_QUERY)) {
             ps.setInt(1, id);
             ResultSet resultSet = ps.executeQuery();
             if (resultSet.next()) {
@@ -265,12 +278,7 @@ public class SessionRepository {
                 result = new boolean[rows][seatsPerRow];
             }
             PreparedStatement ticketsPs = cn.prepareStatement(
-                    "SELECT "
-                            + "ticket.pos_row, "
-                            + "ticket.seat "
-                            + "FROM sessions "
-                            + "JOIN ticket ON sessions.id = ticket.session_id "
-                            + "WHERE sessions.id = (?)");
+                    SELECT_TICKETS_BY_SESSION_ID_QUERY);
             ticketsPs.setInt(1, id);
             ResultSet ticketsRs = ticketsPs.executeQuery();
             while (ticketsRs.next()) {
@@ -286,7 +294,7 @@ public class SessionRepository {
 
     public void deleteAll() {
         try (Connection cn = pool.getConnection();
-             PreparedStatement ps = cn.prepareStatement("DELETE FROM sessions")) {
+             PreparedStatement ps = cn.prepareStatement(DELETE_ALL_QUERY)) {
             ps.executeUpdate();
         } catch (SQLException e) {
             LOG.error("Exception in SessionRepository", e);

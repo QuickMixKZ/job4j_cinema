@@ -22,12 +22,38 @@ public class UserRepository {
         this.pool = pool;
     }
 
+    private static final String INSERT_QUERY = "INSERT INTO "
+            + "users(username, email, phone, password, authority_id) "
+            + "VALUES(?, ?, ?, ?, (SELECT id FROM authorities WHERE authority = 'ROLE_USER'))";
+    private static final String SELECT_BY_ID_QUERY = "SELECT * FROM users WHERE id = (?)";
+    private static final String SELECT_BY_USERNAME_QUERY = "SELECT * FROM users WHERE username = (?)";
+    private static final String SELECT_QUERY = "SELECT * FROM users";
+    private static final String SELECT_BY_UNIQUE_FIELDS_QUERY = "SELECT * "
+            + "FROM users "
+            + "WHERE "
+            + "(username = (?) "
+            + "OR email = (?) "
+            + "OR phone = (?)) "
+            + "AND id != (?)";
+    private static final String SELECT_AUTHORITY_BY_ID_QUERY = "SELECT * FROM authorities WHERE id = (?)";
+    private static final String SELECT_AUTHORITY_BY_AUTHORITY_QUERY = "SELECT * FROM authorities WHERE authority = (?)";
+    private static final String SELECT_AUTHORITY_QUERY = "SELECT * FROM authorities";
+    private static final String UPDATE_QUERY = "UPDATE users "
+            + "SET username = (?), "
+            + "email = (?), "
+            + "phone = (?), "
+            + "password = (?), "
+            + "enabled = (?), "
+            + "authority_id = (?)"
+            + "WHERE id = (?)";
+    private static final String SELECT_ID_BY_USERNAME_QUERY = "SELECT id FROM users WHERE username = (?)";
+    private static final String DELETE_QUERY = "DELETE FROM users WHERE id = (?)";
+    private static final String DELETE_ALL_QUERY = "DELETE FROM users";
+
     public User add(User user) {
         try (Connection cn = pool.getConnection();
              PreparedStatement ps = cn.prepareStatement(
-                     "INSERT INTO "
-                             + "users(username, email, phone, password, authority_id) "
-                             + "VALUES(?, ?, ?, ?, (SELECT id FROM authorities WHERE authority = 'ROLE_USER'))",
+                     INSERT_QUERY,
                      Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, user.getUsername());
             ps.setString(2, user.getEmail());
@@ -47,7 +73,7 @@ public class UserRepository {
     public Optional<User> findById(int id) {
         Optional<User> result = Optional.empty();
         try (Connection cn = pool.getConnection();
-            PreparedStatement ps = cn.prepareStatement("SELECT * FROM users WHERE id = (?)")) {
+            PreparedStatement ps = cn.prepareStatement(SELECT_BY_ID_QUERY)) {
             ps.setInt(1, id);
             ResultSet resultSet = ps.executeQuery();
             if (resultSet.next()) {
@@ -71,7 +97,7 @@ public class UserRepository {
     public Optional<User> findByUsername(String username) {
         Optional<User> result = Optional.empty();
         try (Connection cn = pool.getConnection();
-             PreparedStatement ps = cn.prepareStatement("SELECT * FROM users WHERE username = (?)")) {
+             PreparedStatement ps = cn.prepareStatement(SELECT_BY_USERNAME_QUERY)) {
             ps.setString(1, username);
             ResultSet resultSet = ps.executeQuery();
             if (resultSet.next()) {
@@ -95,7 +121,7 @@ public class UserRepository {
     public List<User> findAll() {
         List<User> result = new ArrayList<>();
         try (Connection cn = pool.getConnection();
-             PreparedStatement ps = cn.prepareStatement("SELECT * FROM users")) {
+             PreparedStatement ps = cn.prepareStatement(SELECT_QUERY)) {
             ResultSet resultSet = ps.executeQuery();
             while (resultSet.next()) {
                 User newUser = new User(
@@ -118,14 +144,7 @@ public class UserRepository {
     public Optional<User> findByUsernameOrEmailOrPhone(User user) {
         Optional<User> result = Optional.empty();
         try (Connection cn = pool.getConnection();
-             PreparedStatement ps = cn.prepareStatement(
-                     "SELECT * "
-                             + "FROM users "
-                             + "WHERE "
-                             + "(username = (?) "
-                             + "OR email = (?) "
-                             + "OR phone = (?)) "
-                             + "AND id != (?)")) {
+             PreparedStatement ps = cn.prepareStatement(SELECT_BY_UNIQUE_FIELDS_QUERY)) {
             ps.setString(1, user.getUsername());
             ps.setString(2, user.getEmail());
             ps.setString(3, user.getPhone());
@@ -152,7 +171,7 @@ public class UserRepository {
     public Authority findAuthorityById(int id) {
         Authority result = null;
         try (Connection cn = pool.getConnection();
-             PreparedStatement ps = cn.prepareStatement("SELECT * FROM authorities WHERE id = (?)")) {
+             PreparedStatement ps = cn.prepareStatement(SELECT_AUTHORITY_BY_ID_QUERY)) {
             ps.setInt(1, id);
             ResultSet resultSet = ps.executeQuery();
             if (resultSet.next()) {
@@ -169,7 +188,7 @@ public class UserRepository {
     public Authority findAuthorityByAuthority(String authority) {
         Authority result = null;
         try (Connection cn = pool.getConnection();
-             PreparedStatement ps = cn.prepareStatement("SELECT * FROM authorities WHERE authority = (?)")) {
+             PreparedStatement ps = cn.prepareStatement(SELECT_AUTHORITY_BY_AUTHORITY_QUERY)) {
             ps.setString(1, authority);
             ResultSet resultSet = ps.executeQuery();
             if (resultSet.next()) {
@@ -186,7 +205,7 @@ public class UserRepository {
     public List<Authority> findAuthorities() {
         List<Authority> result = new ArrayList<>();
         try (Connection cn = pool.getConnection();
-             PreparedStatement ps = cn.prepareStatement("SELECT * FROM authorities")) {
+             PreparedStatement ps = cn.prepareStatement(SELECT_AUTHORITY_QUERY)) {
             ResultSet resultSet = ps.executeQuery();
             while (resultSet.next()) {
                 result.add(new Authority(
@@ -205,15 +224,7 @@ public class UserRepository {
         boolean result = false;
         try (Connection cn = pool.getConnection();
              PreparedStatement ps =
-                     cn.prepareStatement(
-                             "UPDATE users "
-                                     + "SET username = (?), "
-                                     + "email = (?), "
-                                     + "phone = (?), "
-                                     + "password = (?), "
-                                     + "enabled = (?), "
-                                     + "authority_id = (?)"
-                                     + "WHERE id = (?)")) {
+                     cn.prepareStatement(UPDATE_QUERY)) {
             ps.setString(1, user.getUsername());
             ps.setString(2, user.getEmail());
             ps.setString(3, user.getPhone());
@@ -231,7 +242,7 @@ public class UserRepository {
     public boolean existsByName(String name) {
         boolean result = false;
         try (Connection cn = pool.getConnection();
-        PreparedStatement ps = cn.prepareStatement("SELECT id FROM users WHERE username = (?)")) {
+        PreparedStatement ps = cn.prepareStatement(SELECT_ID_BY_USERNAME_QUERY)) {
             ps.setString(1, name);
             ResultSet resultSet = ps.executeQuery();
             result = resultSet.next();
@@ -244,7 +255,7 @@ public class UserRepository {
     public boolean delete(User user) {
         boolean result = false;
         try (Connection cn = pool.getConnection();
-             PreparedStatement ps = cn.prepareStatement("DELETE FROM users WHERE id = (?)")) {
+             PreparedStatement ps = cn.prepareStatement(DELETE_QUERY)) {
             ps.setInt(1, user.getId());
             result = ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -255,7 +266,7 @@ public class UserRepository {
 
     public void deleteAll() {
         try (Connection cn = pool.getConnection();
-             PreparedStatement ps = cn.prepareStatement("DELETE FROM users")) {
+             PreparedStatement ps = cn.prepareStatement(DELETE_ALL_QUERY)) {
             ps.executeUpdate();
         } catch (SQLException e) {
             LOG.error("UserRepository in TicketRepository", e);
