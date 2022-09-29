@@ -14,24 +14,40 @@ import javax.sql.DataSource;
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
-    private final PasswordEncoder passwordEncoder;
     private final DataSource ds;
+    private static final String SELECT_USER_QUERY = """
+            SELECT 
+                username, 
+                password, 
+                enabled 
+            FROM 
+                users
+            WHERE 
+                username = ?
+            """;
 
-    public WebSecurityConfig(PasswordEncoder passwordEncoder, DataSource ds) {
-        this.passwordEncoder = passwordEncoder;
+    private static final String SELECT_AUTHORITY_BY_USERNAME_QUERY = """
+            SELECT 
+                u.username, 
+                a.authority
+            FROM 
+                authorities as a, 
+                users as u
+            WHERE 
+                u.username = ? 
+                AND u.authority_id = a.id
+            """;
+
+
+    public WebSecurityConfig(DataSource ds) {
         this.ds = ds;
     }
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.jdbcAuthentication().dataSource(ds)
-                .usersByUsernameQuery("select username, password, enabled "
-                        + "from users "
-                        + "where username = ?")
-                .authoritiesByUsernameQuery(
-                        " select u.username, a.authority "
-                                + "from authorities as a, users as u "
-                                + "where u.username = ? and u.authority_id = a.id");
+                .usersByUsernameQuery(SELECT_USER_QUERY)
+                .authoritiesByUsernameQuery(SELECT_AUTHORITY_BY_USERNAME_QUERY);
     }
 
     @Bean

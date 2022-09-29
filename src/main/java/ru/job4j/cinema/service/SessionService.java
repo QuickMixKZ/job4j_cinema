@@ -7,6 +7,7 @@ import ru.job4j.cinema.repository.SessionRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -32,7 +33,7 @@ public class SessionService {
     public Session findById(int id) {
         Optional<Session> result = sessionRepository.findById(id);
         if (result.isEmpty()) {
-            throw new IllegalArgumentException(String.format("Session with ID:%d not found.", id));
+            throw new NoSuchElementException(String.format("Session with ID:%d not found.", id));
         }
         return result.get();
     }

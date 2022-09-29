@@ -34,10 +34,7 @@ public class GenreRepository {
             PreparedStatement ps = cn.prepareStatement(SELECT_QUERY)) {
             ResultSet resultSet = ps.executeQuery();
             while (resultSet.next()) {
-                Genre genre = new Genre(
-                  resultSet.getInt("id"),
-                  resultSet.getString("name")
-                );
+                Genre genre = createGenre(resultSet);
                 result.add(genre);
             }
         } catch (SQLException e) {
@@ -71,10 +68,7 @@ public class GenreRepository {
             ResultSet resultSet = ps.executeQuery();
             if (resultSet.next()) {
                 result = Optional.of(
-                        new Genre(
-                                resultSet.getInt("id"),
-                                resultSet.getString("name")
-                        )
+                        createGenre(resultSet)
                 );
             }
         } catch (SQLException e) {
@@ -91,10 +85,7 @@ public class GenreRepository {
             ResultSet resultSet = ps.executeQuery();
             if (resultSet.next()) {
                 result = Optional.of(
-                        new Genre(
-                                resultSet.getInt("id"),
-                                resultSet.getString("name")
-                        )
+                        createGenre(resultSet)
                 );
             }
         } catch (SQLException e) {
@@ -135,5 +126,12 @@ public class GenreRepository {
         } catch (SQLException e) {
             LOG.error("Exception in GenreRepository", e);
         }
+    }
+
+    private Genre createGenre(ResultSet resultSet) throws SQLException {
+        return new Genre(
+                resultSet.getInt("id"),
+                resultSet.getString("name")
+        );
     }
 }

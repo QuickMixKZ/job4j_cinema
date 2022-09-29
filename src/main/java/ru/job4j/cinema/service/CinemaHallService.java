@@ -5,6 +5,7 @@ import ru.job4j.cinema.model.CinemaHall;
 import ru.job4j.cinema.repository.CinemaHallRepository;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -28,7 +29,7 @@ public class CinemaHallService {
     public CinemaHall findById(int id) {
         Optional<CinemaHall> result = cinemaHallRepository.findById(id);
         if (result.isEmpty()) {
-            throw new IllegalArgumentException(String.format("Cinema hall with ID:%d not found.", id));
+            throw new NoSuchElementException(String.format("Cinema hall with ID:%d not found.", id));
         }
         return result.get();
     }
@@ -36,7 +37,7 @@ public class CinemaHallService {
     public CinemaHall findByName(String name) {
         Optional<CinemaHall> result = cinemaHallRepository.findByName(name);
         if (result.isEmpty()) {
-            throw new IllegalArgumentException(String.format("Cinema hall with name \"%s\" not found.", name));
+            throw new NoSuchElementException(String.format("Cinema hall with name \"%s\" not found.", name));
         }
         return result.get();
     }

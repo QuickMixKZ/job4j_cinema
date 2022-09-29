@@ -5,6 +5,7 @@ import ru.job4j.cinema.model.Genre;
 import ru.job4j.cinema.repository.GenreRepository;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -23,7 +24,7 @@ public class GenreService {
     public Genre findById(int id) {
         Optional<Genre> result = genreRepository.findById(id);
         if (result.isEmpty()) {
-            throw new IllegalArgumentException(String.format("Genre with id: %d not found.", id));
+            throw new NoSuchElementException(String.format("Genre with id: %d not found.", id));
         }
         return result.get();
     }
@@ -31,7 +32,7 @@ public class GenreService {
     public Genre findByName(String name) {
         Optional<Genre> result = genreRepository.findByName(name);
         if (result.isEmpty()) {
-            throw new IllegalArgumentException(String.format("Genre with name \"%s\" not found.", name));
+            throw new NoSuchElementException(String.format("Genre with name \"%s\" not found.", name));
         }
         return result.get();
     }
@@ -39,7 +40,7 @@ public class GenreService {
     public Genre add(Genre genre) {
         Optional<Genre> genreDb = genreRepository.findByName(genre.getName());
         if (genreDb.isPresent()) {
-            throw new IllegalArgumentException(String.format("Genre with name \"%s\" already exists.", genre.getName()));
+            throw new NoSuchElementException(String.format("Genre with name \"%s\" already exists.", genre.getName()));
         }
         return genreRepository.add(genre);
     }

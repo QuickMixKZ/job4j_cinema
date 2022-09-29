@@ -21,20 +21,30 @@ public class MovieRepository {
     private static final String INSERT_GENRE_QUERY = "INSERT INTO movie_genre(movie_id, genre_id) VALUES(?, ?)";
     private static final String SELECT_BY_ID_QUERY = "SELECT * FROM movie WHERE id = (?)";
     private static final String SELECT_BY_NAME_AND_YEAR_QUERY = "SELECT * FROM movie WHERE name = (?) AND year = (?)";
-    private static final String SELECT_GENRE_BY_MOVIE_QUERY = "SELECT "
-            + "g.id AS id, "
-            + "g.name AS name "
-            + "FROM movie_genre AS mg "
-            + "JOIN genre AS g ON mg.genre_id = g.id "
-            + "WHERE mg.movie_id = (?)";
+    private static final String SELECT_GENRE_BY_MOVIE_QUERY = """
+            SELECT 
+                g.id AS id, 
+                g.name AS name 
+            FROM 
+                movie_genre AS mg 
+                JOIN genre AS g 
+                    ON mg.genre_id = g.id 
+            WHERE 
+                mg.movie_id = (?)
+            """;
     private static final String DELETE_BY_ID_QUERY = "DELETE FROM movie WHERE id = (?)";
-    private static final String UPDATE_QUERY = "UPDATE movie "
-            + "SET name = (?), "
-            + "description = (?), "
-            + "year = (?), "
-            + "poster = (?),"
-            + "duration = (?)"
-            + "WHERE id = (?)";
+    private static final String UPDATE_QUERY = """
+            UPDATE 
+                movie 
+            SET 
+                name = (?), 
+                description = (?), 
+                year = (?),
+                poster = (?),
+                duration = (?) 
+            WHERE
+                id = (?)
+            """;
     private static final String DELETE_GENRE_BY_MOVIE_ID_QUERY = "DELETE FROM movie_genre WHERE movie_id = (?)";
     private static final String DELETE_ALL_QUERY = "DELETE FROM movie";
     private static final String SELECT_POSTER_BY_MOVIE_ID_QUERY = "SELECT poster FROM movie WHERE movie.id = (?)";
@@ -49,14 +59,7 @@ public class MovieRepository {
              PreparedStatement ps = cn.prepareStatement(SELECT_QUERY)) {
             ResultSet resultSet = ps.executeQuery();
             while (resultSet.next()) {
-                Movie movie = new Movie(
-                        resultSet.getInt("id"),
-                        resultSet.getString("name"),
-                        resultSet.getString("description"),
-                        resultSet.getInt("year"),
-                        resultSet.getBytes("poster"),
-                        resultSet.getInt("duration")
-                );
+                Movie movie = createMovie(resultSet);
                 movie.setGenres(findGenresByMovie(movie));
                 result.add(movie);
             }
@@ -73,14 +76,7 @@ public class MovieRepository {
             ps.setInt(1, id);
             ResultSet resultSet = ps.executeQuery();
             if (resultSet.next()) {
-                Movie movie = new Movie(
-                        resultSet.getInt("id"),
-                        resultSet.getString("name"),
-                        resultSet.getString("description"),
-                        resultSet.getInt("year"),
-                        resultSet.getBytes("poster"),
-                        resultSet.getInt("duration")
-                );
+                Movie movie = createMovie(resultSet);
                 movie.setGenres(findGenresByMovie(movie));
                 result = Optional.of(movie);
             }
@@ -98,14 +94,7 @@ public class MovieRepository {
             ps.setInt(2, year);
             ResultSet resultSet = ps.executeQuery();
             if (resultSet.next()) {
-                Movie movie = new Movie(
-                        resultSet.getInt("id"),
-                        resultSet.getString("name"),
-                        resultSet.getString("description"),
-                        resultSet.getInt("year"),
-                        resultSet.getBytes("poster"),
-                        resultSet.getInt("duration")
-                );
+                Movie movie = createMovie(resultSet);
                 movie.setGenres(findGenresByMovie(movie));
                 result = Optional.of(movie);
             }
@@ -153,10 +142,7 @@ public class MovieRepository {
             ResultSet resultSet = ps.executeQuery();
             while (resultSet.next()) {
                 result.add(
-                        new Genre(
-                                resultSet.getInt("id"),
-                                resultSet.getString("name")
-                        )
+                        createGenre(resultSet)
                 );
             }
         } catch (SQLException e) {
@@ -164,6 +150,7 @@ public class MovieRepository {
         }
         return result;
     }
+
 
     public boolean delete(Movie movie) {
         boolean result = false;
@@ -199,7 +186,7 @@ public class MovieRepository {
 
     private void updateGenresInMovie(Movie movie) {
         try (Connection cn = pool.getConnection();
-            PreparedStatement ps = cn.prepareStatement(DELETE_GENRE_BY_MOVIE_ID_QUERY)) {
+             PreparedStatement ps = cn.prepareStatement(DELETE_GENRE_BY_MOVIE_ID_QUERY)) {
             ps.setInt(1, movie.getId());
             ps.executeUpdate();
             cn.setAutoCommit(false);
@@ -238,5 +225,23 @@ public class MovieRepository {
             LOG.error("Exception in MovieRepository", e);
         }
         return result;
+    }
+
+    private Movie createMovie(ResultSet resultSet) throws SQLException {
+        return new Movie(
+                resultSet.getInt("id"),
+                resultSet.getString("name"),
+                resultSet.getString("description"),
+                resultSet.getInt("year"),
+                resultSet.getBytes("poster"),
+                resultSet.getInt("duration")
+        );
+    }
+
+    private Genre createGenre(ResultSet resultSet) throws SQLException {
+        return new Genre(
+                resultSet.getInt("id"),
+                resultSet.getString("name")
+        );
     }
 }

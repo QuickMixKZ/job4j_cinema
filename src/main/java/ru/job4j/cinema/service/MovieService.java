@@ -5,6 +5,7 @@ import ru.job4j.cinema.model.Movie;
 import ru.job4j.cinema.repository.MovieRepository;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -26,7 +27,7 @@ public class MovieService {
                         movie.getName(),
                         movie.getYear());
         if (movieDb.isPresent()) {
-            throw new IllegalArgumentException(
+            throw new NoSuchElementException(
                     String.format("Movie with name \"%s\" and premiere date - %d", movie.getName(), movie.getYear())
             );
         }
@@ -36,7 +37,7 @@ public class MovieService {
     public Movie findById(int id) {
         Optional<Movie> result = movieRepository.findById(id);
         if (result.isEmpty()) {
-            throw new IllegalArgumentException(String.format("Movie with ID:%d not found.", id));
+            throw new NoSuchElementException(String.format("Movie with ID:%d not found.", id));
         }
         return result.get();
     }

@@ -6,6 +6,7 @@ import ru.job4j.cinema.model.User;
 import ru.job4j.cinema.repository.UserRepository;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -25,7 +26,7 @@ public class UserService {
     public User findById(int id) {
         Optional<User> result = userRepository.findById(id);
         if (result.isEmpty()) {
-            throw new IllegalArgumentException(String.format("User with ID: %d not found.", id));
+            throw new NoSuchElementException(String.format("User with ID: %d not found.", id));
         }
         return result.get();
     }
@@ -33,7 +34,7 @@ public class UserService {
     public User findByUsername(String username) {
         Optional<User> result = userRepository.findByUsername(username);
         if (result.isEmpty()) {
-            throw new IllegalArgumentException(String.format("User with username \"%s\" not found.", username));
+            throw new NoSuchElementException(String.format("User with username \"%s\" not found.", username));
         }
         return result.get();
     }

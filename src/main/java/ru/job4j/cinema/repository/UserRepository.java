@@ -22,30 +22,40 @@ public class UserRepository {
         this.pool = pool;
     }
 
-    private static final String INSERT_QUERY = "INSERT INTO "
-            + "users(username, email, phone, password, authority_id) "
-            + "VALUES(?, ?, ?, ?, (SELECT id FROM authorities WHERE authority = 'ROLE_USER'))";
+    private static final String INSERT_QUERY = """
+                INSERT INTO 
+                    users(username, email, phone, password, authority_id) 
+                VALUES
+                    (?, ?, ?, ?, (SELECT id FROM authorities WHERE authority = 'ROLE_USER'))
+            """;
     private static final String SELECT_BY_ID_QUERY = "SELECT * FROM users WHERE id = (?)";
     private static final String SELECT_BY_USERNAME_QUERY = "SELECT * FROM users WHERE username = (?)";
     private static final String SELECT_QUERY = "SELECT * FROM users";
-    private static final String SELECT_BY_UNIQUE_FIELDS_QUERY = "SELECT * "
-            + "FROM users "
-            + "WHERE "
-            + "(username = (?) "
-            + "OR email = (?) "
-            + "OR phone = (?)) "
-            + "AND id != (?)";
+    private static final String SELECT_BY_UNIQUE_FIELDS_QUERY = """
+            SELECT 
+                * 
+            FROM 
+                users 
+            WHERE 
+                (username = (?) OR email = (?) OR phone = (?)) 
+                AND id != (?)
+            """;
     private static final String SELECT_AUTHORITY_BY_ID_QUERY = "SELECT * FROM authorities WHERE id = (?)";
     private static final String SELECT_AUTHORITY_BY_AUTHORITY_QUERY = "SELECT * FROM authorities WHERE authority = (?)";
     private static final String SELECT_AUTHORITY_QUERY = "SELECT * FROM authorities";
-    private static final String UPDATE_QUERY = "UPDATE users "
-            + "SET username = (?), "
-            + "email = (?), "
-            + "phone = (?), "
-            + "password = (?), "
-            + "enabled = (?), "
-            + "authority_id = (?)"
-            + "WHERE id = (?)";
+    private static final String UPDATE_QUERY = """
+            UPDATE 
+                users 
+            SET 
+                username = (?), 
+                email = (?), 
+                phone = (?), 
+                password = (?), 
+                enabled = (?), 
+                authority_id = (?)
+            WHERE 
+                id = (?)
+            """;
     private static final String SELECT_ID_BY_USERNAME_QUERY = "SELECT id FROM users WHERE username = (?)";
     private static final String DELETE_QUERY = "DELETE FROM users WHERE id = (?)";
     private static final String DELETE_ALL_QUERY = "DELETE FROM users";
@@ -73,17 +83,11 @@ public class UserRepository {
     public Optional<User> findById(int id) {
         Optional<User> result = Optional.empty();
         try (Connection cn = pool.getConnection();
-            PreparedStatement ps = cn.prepareStatement(SELECT_BY_ID_QUERY)) {
+             PreparedStatement ps = cn.prepareStatement(SELECT_BY_ID_QUERY)) {
             ps.setInt(1, id);
             ResultSet resultSet = ps.executeQuery();
             if (resultSet.next()) {
-                User newUser = new User(
-                        resultSet.getInt("id"),
-                        resultSet.getString("username"),
-                        resultSet.getString("email"),
-                        resultSet.getString("phone"),
-                        resultSet.getString("password"),
-                        resultSet.getBoolean("enabled"));
+                User newUser = createUser(resultSet);
                 Authority authority = findAuthorityById(resultSet.getInt("authority_id"));
                 newUser.setAuthority(authority);
                 result = Optional.of(newUser);
@@ -94,6 +98,16 @@ public class UserRepository {
         return result;
     }
 
+    private User createUser(ResultSet resultSet) throws SQLException {
+        return new User(
+                resultSet.getInt("id"),
+                resultSet.getString("username"),
+                resultSet.getString("email"),
+                resultSet.getString("phone"),
+                resultSet.getString("password"),
+                resultSet.getBoolean("enabled"));
+    }
+
     public Optional<User> findByUsername(String username) {
         Optional<User> result = Optional.empty();
         try (Connection cn = pool.getConnection();
@@ -101,13 +115,7 @@ public class UserRepository {
             ps.setString(1, username);
             ResultSet resultSet = ps.executeQuery();
             if (resultSet.next()) {
-                User newUser = new User(
-                        resultSet.getInt("id"),
-                        resultSet.getString("username"),
-                        resultSet.getString("email"),
-                        resultSet.getString("phone"),
-                        resultSet.getString("password"),
-                        resultSet.getBoolean("enabled"));
+                User newUser = createUser(resultSet);
                 Authority authority = findAuthorityById(resultSet.getInt("authority_id"));
                 newUser.setAuthority(authority);
                 result = Optional.of(newUser);
@@ -124,13 +132,7 @@ public class UserRepository {
              PreparedStatement ps = cn.prepareStatement(SELECT_QUERY)) {
             ResultSet resultSet = ps.executeQuery();
             while (resultSet.next()) {
-                User newUser = new User(
-                        resultSet.getInt("id"),
-                        resultSet.getString("username"),
-                        resultSet.getString("email"),
-                        resultSet.getString("phone"),
-                        resultSet.getString("password"),
-                        resultSet.getBoolean("enabled"));
+                User newUser = createUser(resultSet);
                 Authority authority = findAuthorityById(resultSet.getInt("authority_id"));
                 newUser.setAuthority(authority);
                 result.add(newUser);
@@ -151,13 +153,7 @@ public class UserRepository {
             ps.setInt(4, user.getId());
             ResultSet resultSet = ps.executeQuery();
             if (resultSet.next()) {
-                User newUser = new User(
-                        resultSet.getInt("id"),
-                        resultSet.getString("username"),
-                        resultSet.getString("email"),
-                        resultSet.getString("phone"),
-                        resultSet.getString("password"),
-                        resultSet.getBoolean("enabled"));
+                User newUser = createUser(resultSet);
                 Authority authority = findAuthorityById(resultSet.getInt("authority_id"));
                 newUser.setAuthority(authority);
                 result = Optional.of(newUser);
@@ -175,14 +171,18 @@ public class UserRepository {
             ps.setInt(1, id);
             ResultSet resultSet = ps.executeQuery();
             if (resultSet.next()) {
-                result = new Authority(
-                                resultSet.getInt("id"),
-                                resultSet.getString("authority"));
+                result = createAuthority(resultSet);
             }
         } catch (SQLException e) {
             LOG.error("UserRepository in TicketRepository", e);
         }
         return result;
+    }
+
+    private Authority createAuthority(ResultSet resultSet) throws SQLException {
+        return new Authority(
+                resultSet.getInt("id"),
+                resultSet.getString("authority"));
     }
 
     public Authority findAuthorityByAuthority(String authority) {
@@ -192,9 +192,7 @@ public class UserRepository {
             ps.setString(1, authority);
             ResultSet resultSet = ps.executeQuery();
             if (resultSet.next()) {
-                result = new Authority(
-                        resultSet.getInt("id"),
-                        resultSet.getString("authority"));
+                result = createAuthority(resultSet);
             }
         } catch (SQLException e) {
             LOG.error("UserRepository in TicketRepository", e);
@@ -208,10 +206,7 @@ public class UserRepository {
              PreparedStatement ps = cn.prepareStatement(SELECT_AUTHORITY_QUERY)) {
             ResultSet resultSet = ps.executeQuery();
             while (resultSet.next()) {
-                result.add(new Authority(
-                        resultSet.getInt("id"),
-                        resultSet.getString("authority")
-                        )
+                result.add(createAuthority(resultSet)
                 );
             }
         } catch (SQLException e) {
@@ -242,7 +237,7 @@ public class UserRepository {
     public boolean existsByName(String name) {
         boolean result = false;
         try (Connection cn = pool.getConnection();
-        PreparedStatement ps = cn.prepareStatement(SELECT_ID_BY_USERNAME_QUERY)) {
+             PreparedStatement ps = cn.prepareStatement(SELECT_ID_BY_USERNAME_QUERY)) {
             ps.setString(1, name);
             ResultSet resultSet = ps.executeQuery();
             result = resultSet.next();

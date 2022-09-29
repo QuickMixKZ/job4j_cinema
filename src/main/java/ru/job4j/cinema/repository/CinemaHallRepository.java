@@ -16,9 +16,12 @@ public class CinemaHallRepository {
 
     private final BasicDataSource pool;
     private static final Logger LOG = LoggerFactory.getLogger(CinemaHallRepository.class.getName());
-    private static final String INSERT_QUERY = "INSERT INTO "
-            + "cinema_hall(name, rows_number, seats_per_row)"
-            + "VALUES (?, ?, ?)";
+    private static final String INSERT_QUERY = """
+            INSERT INTO 
+                cinema_hall(name, rows_number, seats_per_row) 
+            VALUES 
+                (?, ?, ?)
+            """;
 
     private static final String SELECT_QUERY = "SELECT * FROM cinema_hall ORDER BY id";
 
@@ -26,12 +29,16 @@ public class CinemaHallRepository {
 
     private static final String SELECT_BY_NAME_QUERY = "SELECT * FROM cinema_hall WHERE name = (?)";
 
-    private static final String UPDATE_QUERY = "UPDATE cinema_hall "
-            + "SET name = (?), "
-            + "rows_number = (?),"
-            + "seats_per_row = (?)"
-            + "WHERE id = (?)";
-
+    private static final String UPDATE_QUERY = """
+            UPDATE 
+                cinema_hall 
+            SET 
+                name = (?), 
+                rows_number = (?), 
+                seats_per_row = (?)
+            WHERE
+                id = (?)
+            """;
     private static final String DELETE_ALL_QUERY = "DELETE FROM cinema_hall";
 
     private static final String DELETE_BY_ID_QUERY = "DELETE FROM cinema_hall WHERE id = (?)";
@@ -54,7 +61,7 @@ public class CinemaHallRepository {
                 cinemaHall.setId(id.getInt("id"));
             }
         } catch (SQLException e) {
-           LOG.error("Exception in CinemaHallRepository", e);
+            LOG.error("Exception in CinemaHallRepository", e);
         }
         return cinemaHall;
     }
@@ -62,16 +69,11 @@ public class CinemaHallRepository {
     public List<CinemaHall> findAll() {
         List<CinemaHall> result = new ArrayList<>();
         try (Connection cn = pool.getConnection();
-            PreparedStatement ps = cn.prepareStatement(SELECT_QUERY)) {
+             PreparedStatement ps = cn.prepareStatement(SELECT_QUERY)) {
             ResultSet resultSet = ps.executeQuery();
             while (resultSet.next()) {
                 result.add(
-                        new CinemaHall(
-                                resultSet.getInt("id"),
-                                resultSet.getString("name"),
-                                resultSet.getInt("rows_number"),
-                                resultSet.getInt("seats_per_row")
-                        )
+                        createCinemaHall(resultSet)
                 );
             }
         } catch (SQLException e) {
@@ -88,12 +90,7 @@ public class CinemaHallRepository {
             ResultSet resultSet = ps.executeQuery();
             while (resultSet.next()) {
                 result = Optional.of(
-                        new CinemaHall(
-                                resultSet.getInt("id"),
-                                resultSet.getString("name"),
-                                resultSet.getInt("rows_number"),
-                                resultSet.getInt("seats_per_row")
-                        )
+                        createCinemaHall(resultSet)
                 );
             }
         } catch (SQLException e) {
@@ -110,12 +107,7 @@ public class CinemaHallRepository {
             ResultSet resultSet = ps.executeQuery();
             while (resultSet.next()) {
                 result = Optional.of(
-                        new CinemaHall(
-                                resultSet.getInt("id"),
-                                resultSet.getString("name"),
-                                resultSet.getInt("rows_number"),
-                                resultSet.getInt("seats_per_row")
-                        )
+                        createCinemaHall(resultSet)
                 );
             }
         } catch (SQLException e) {
@@ -158,5 +150,14 @@ public class CinemaHallRepository {
         } catch (SQLException e) {
             LOG.error("Exception in CinemaHallRepository", e);
         }
+    }
+
+    private CinemaHall createCinemaHall(ResultSet resultSet) throws SQLException {
+        return new CinemaHall(
+                resultSet.getInt("id"),
+                resultSet.getString("name"),
+                resultSet.getInt("rows_number"),
+                resultSet.getInt("seats_per_row")
+        );
     }
 }

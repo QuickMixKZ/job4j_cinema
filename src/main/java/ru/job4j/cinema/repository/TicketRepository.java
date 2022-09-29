@@ -16,27 +16,36 @@ public class TicketRepository {
     private final BasicDataSource pool;
     private static final Logger LOG = LoggerFactory.getLogger(TicketRepository.class.getName());
 
-    private static final String INSERT_QUERY = "INSERT INTO "
-            + "ticket(session_id, user_id, pos_row, seat) "
-            + "VALUES(?, ?, ? ,?)";
-    private static final String FIND_TICKETS_BY_USER_QUERY = "SELECT "
-            + "ticket.id AS ticket_id, "
-            + "ticket.pos_row AS ticket_pos_row, "
-            + "ticket.seat AS ticket_seat, "
-            + "sessions.start_date AS sessions_start_date, "
-            + "movie.name AS movie_name, "
-            + "movie.duration AS movie_duration, "
-            + "cinema_hall.name AS cinema_hall_name "
-            + "from "
-            + "ticket "
-            + "JOIN "
-            + "sessions ON ticket.session_id = sessions.id "
-            + "JOIN "
-            + "movie ON sessions.movie_id = movie.id "
-            + "JOIN "
-            + "cinema_hall ON sessions.cinema_hall_id = cinema_hall.id "
-            + "WHERE ticket.user_id = (?) "
-            + "AND sessions.start_date > now()";
+    private static final String INSERT_QUERY = """
+            INSERT 
+                INTO ticket(session_id, user_id, pos_row, seat) 
+            VALUES
+                (?, ?, ? ,?)
+            """;
+    private static final String FIND_TICKETS_BY_USER_QUERY = """
+            SELECT 
+                ticket.id AS ticket_id, 
+                ticket.pos_row AS ticket_pos_row, 
+                ticket.seat AS ticket_seat, 
+                sessions.start_date AS sessions_start_date, 
+                movie.name AS movie_name, 
+                movie.duration AS movie_duration, 
+                cinema_hall.name AS cinema_hall_name 
+            FROM 
+                ticket 
+            JOIN 
+                sessions 
+                    ON ticket.session_id = sessions.id 
+            JOIN 
+                movie 
+                    ON sessions.movie_id = movie.id 
+            JOIN 
+                cinema_hall 
+                    ON sessions.cinema_hall_id = cinema_hall.id 
+            WHERE 
+                ticket.user_id = (?) 
+                AND sessions.start_date > now()
+            """;
 
 
     public TicketRepository(BasicDataSource pool) {
@@ -69,38 +78,54 @@ public class TicketRepository {
     public List<Ticket> findActualTicketsByUser(User user) {
         List<Ticket> result = new ArrayList<>();
         try (Connection cn = pool.getConnection();
-            PreparedStatement ps = cn.prepareStatement(
-                    FIND_TICKETS_BY_USER_QUERY
-            )) {
+             PreparedStatement ps = cn.prepareStatement(
+                     FIND_TICKETS_BY_USER_QUERY
+             )) {
             ps.setInt(1, user.getId());
             ResultSet resultSet = ps.executeQuery();
             while (resultSet.next()) {
-                Movie movie = new Movie(
-                        resultSet.getString("movie_name"),
-                        resultSet.getInt("movie_duration")
-                );
-                CinemaHall cinemaHall = new CinemaHall(
-                        resultSet.getString("cinema_hall_name")
-                );
-                Session session = new Session(
-                        movie,
-                        cinemaHall,
-                        resultSet.getTimestamp("sessions_start_date").toLocalDateTime()
-                );
+                Movie movie = createMovie(resultSet);
+                CinemaHall cinemaHall = createCinemaHall(resultSet);
+                Session session = createSession(resultSet, movie, cinemaHall);
                 result.add(
-                        new Ticket(
-                                resultSet.getInt("ticket_id"),
-                                session,
-                                user,
-                                resultSet.getInt("ticket_pos_row"),
-                                resultSet.getInt("ticket_seat")
-
-                        )
+                        createTicket(user, resultSet, session)
                 );
             }
         } catch (SQLException e) {
             LOG.error("Exception in TicketRepository", e);
         }
         return result;
+    }
+
+    private Ticket createTicket(User user, ResultSet resultSet, Session session) throws SQLException {
+        return new Ticket(
+                resultSet.getInt("ticket_id"),
+                session,
+                user,
+                resultSet.getInt("ticket_pos_row"),
+                resultSet.getInt("ticket_seat")
+
+        );
+    }
+
+    private Session createSession(ResultSet resultSet, Movie movie, CinemaHall cinemaHall) throws SQLException {
+        return new Session(
+                movie,
+                cinemaHall,
+                resultSet.getTimestamp("sessions_start_date").toLocalDateTime()
+        );
+    }
+
+    private CinemaHall createCinemaHall(ResultSet resultSet) throws SQLException {
+        return new CinemaHall(
+                resultSet.getString("cinema_hall_name")
+        );
+    }
+
+    private Movie createMovie(ResultSet resultSet) throws SQLException {
+        return new Movie(
+                resultSet.getString("movie_name"),
+                resultSet.getInt("movie_duration")
+        );
     }
 }
