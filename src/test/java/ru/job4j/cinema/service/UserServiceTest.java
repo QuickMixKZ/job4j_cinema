@@ -9,6 +9,7 @@ import ru.job4j.cinema.model.User;
 import ru.job4j.cinema.repository.UserRepository;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 public class UserServiceTest {
 
@@ -30,7 +31,7 @@ public class UserServiceTest {
         Assert.assertEquals(addedUser, userService.findById(addedUser.getId()));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NoSuchElementException.class)
     public void whenAddOneThenFindByWrongId() {
         User newUser = new User(
                 "user",
@@ -176,7 +177,7 @@ public class UserServiceTest {
         Assert.assertEquals(List.of(), userService.findAll());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NoSuchElementException.class)
     public void whenAddOneThenDeleteWithWrongId() {
         User newUser = new User(
                 "user",

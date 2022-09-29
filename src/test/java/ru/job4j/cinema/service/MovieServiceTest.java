@@ -11,6 +11,7 @@ import ru.job4j.cinema.repository.GenreRepository;
 import ru.job4j.cinema.repository.MovieRepository;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 public class MovieServiceTest {
@@ -56,7 +57,7 @@ public class MovieServiceTest {
         Assertions.assertEquals(List.of(addedMovie, addedMovie1), allMovies);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NoSuchElementException.class)
     public void whenAddTwoMoviesWithSameNameAndYearThenException() {
         Genre addedGenre = genreService.add(new Genre("Триллер"));
         Genre addedGenre1 = genreService.add(new Genre("Комедия"));
@@ -98,7 +99,7 @@ public class MovieServiceTest {
         Assertions.assertTrue(movieService.update(addedMovie1));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NoSuchElementException.class)
     public void whenAddTwoMoviesAndUpdateWithWrongId() {
         Genre addedGenre = genreService.add(new Genre("Триллер"));
         Genre addedGenre1 = genreService.add(new Genre("Комедия"));
@@ -131,7 +132,7 @@ public class MovieServiceTest {
         Assertions.assertEquals(0, movieService.findAll().size());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NoSuchElementException.class)
     public void whenAddTwoMoviesThenDeleteWithWrongIdThenException() {
         Genre addedGenre = genreService.add(new Genre("Триллер"));
         Genre addedGenre1 = genreService.add(new Genre("Комедия"));

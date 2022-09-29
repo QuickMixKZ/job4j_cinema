@@ -16,6 +16,7 @@ import ru.job4j.cinema.repository.SessionRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 public class SessionServiceTest {
@@ -170,7 +171,7 @@ public class SessionServiceTest {
         Assert.assertEquals(addedSecondSession, sessionService.findById(addedSecondSession.getId()));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NoSuchElementException.class)
     public void whenAddTwoThenFindByWrongId() {
         Genre comedyGenre = genreService.add(new Genre("Комедия"));
         Genre dramaGenre = genreService.add(new Genre("Драма"));

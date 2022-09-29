@@ -7,6 +7,7 @@ import ru.job4j.cinema.model.CinemaHall;
 import ru.job4j.cinema.repository.CinemaHallRepository;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -66,7 +67,7 @@ public class CinemaHallServiceTest {
         assertEquals(largeCinemaHall, cinemaHallService.findByName(largeCinemaHall.getName()));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NoSuchElementException.class)
     public void whenAddTwoThenFindByWrongId() {
         CinemaHall smallCinemaHall = cinemaHallService.add(
                 new CinemaHall("Малый зал", 5, 10)
@@ -77,7 +78,7 @@ public class CinemaHallServiceTest {
         cinemaHallService.findById(0);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NoSuchElementException.class)
     public void whenAddTwoThenFindByWrongName() {
         CinemaHall smallCinemaHall = cinemaHallService.add(
                 new CinemaHall("Малый зал", 5, 10)
@@ -101,7 +102,7 @@ public class CinemaHallServiceTest {
         assertEquals(smallCinemaHall, cinemaHallService.findByName(smallCinemaHall.getName()));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NoSuchElementException.class)
     public void whenAddTwoThenUpdateOneWithWrongID() {
         CinemaHall smallCinemaHall = cinemaHallService.add(
                 new CinemaHall("Малый зал", 5, 10)
@@ -151,7 +152,7 @@ public class CinemaHallServiceTest {
         assertEquals(List.of(), cinemaHallService.findAll());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NoSuchElementException.class)
     public void whenAddTwoThenDeleteAlreadyDeletedThenException() {
         CinemaHall smallCinemaHall = cinemaHallService.add(
                 new CinemaHall("Малый зал", 5, 10)
